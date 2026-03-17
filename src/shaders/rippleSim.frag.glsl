@@ -19,7 +19,7 @@ void main() {
     texture2D(uCurrent, vUv + vec2(0.0, uTexelSize.y)).r +
     texture2D(uCurrent, vUv - vec2(0.0, uTexelSize.y)).r;
   float wave = nw * 0.5 - prevWave;
-  wave *= 0.96;
+  wave *= 0.94;
 
   // --- G: Erosion (heat equation diffusion) ---
   float ne =
@@ -41,8 +41,8 @@ void main() {
     vec2 diff = vUv - uMouse;
     float dist2 = dot(diff, diff);
     float g = exp(-dist2 * 1500.0);
-    wave += 0.03 * g;
-    erosion += 0.008 * g;
+    wave += 0.015 * g;
+    erosion += 0.004 * g;
   }
 
   erosion = clamp(erosion, 0.0, 0.8);
