@@ -1,8 +1,8 @@
 ---
 /**
  * Layer 2 — Depths index.
- * Floating text fragments, progressively unlocked by visit count.
- * Fragments are distributed in a 3×3 zone grid to prevent clustering.
+ * Floating text fragments from a large corpus, randomly selected each load.
+ * Progressively unlocked by visit count (BASE → EXTRA → DEEP).
  */
 import Layer2Layout from '../../layouts/Layer2Layout.astro';
 ---
@@ -15,22 +15,79 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
 <script is:inline>
   (function() {
     /* ==========================================================
-     *  碎片文本 — 在这里编辑
-     *  BASE: 始终显示  |  EXTRA: visits >= 3 时额外显示
+     *  碎片语料库 — 在这里编辑/添加
+     *  BASE_POOL:  始终可用（每次随机取 5 条）
+     *  EXTRA_POOL: visits >= 3（每次随机取 4 条）
+     *  DEEP_POOL:  visits >= 6（每次随机取 4 条）
      * ========================================================== */
-    var BASE_FRAGMENTS = [
+    var BASE_POOL = [
       '有些东西不在表面。',
-      '你为什么来这里？',
+      '最重要的到底是什么。',
       '继续。',
       '不是所有人都会找到这里。',
+      '大部分时间的我是不清醒的。',
+      '大部分人都不喜欢做决定不喜欢担责任。',
+      '说实话，不加上"说实话"三个字，我可能就不是在说实话。',
+      '我们距离完全不会的东西，可能只有一本教科书。',
+      '局部最优不是全局最优。',
+      '为手段而手段没有意义。',
+      '你不需要现在就找到对的路。',
+      '别不动脑子。',
+      'Tutorial Hell.',
+      '想到就去做。你等什么呢？',
+      '精益求精。',
     ];
 
-    var EXTRA_FRAGMENTS = [
-      '你开始理解了。',
-      '表面只是开始。',
-      '每一次回来，都会看到更多。',
+    var EXTRA_POOL = [
+      '我是一个循规蹈矩的人，所以我渴望乱来。',
+      '把30岁以后的人生都当做礼物。',
+      '认真的关掉所有东西，学会一个东西，会让人真的很开心。',
+      '孤独代表垃圾吗？',
+      '环境是影响一个人最大的因素。',
+      '看到好看的画就想自己画，看到好看的人就想自己也有。但是我没有。',
+      '我的善良只是为了避免交战的乌龟壳。',
+      '想要引起共鸣，就去写郁郁不得志。',
+      '你如果真的想的跟我一样，你为什么不说呢？',
+      '在任何一条路上，第一次真正沉下去。',
+      '不要害怕你完全不理解的东西。',
+      '打破束缚的时候，会很激动发抖。',
+      '每天整理好要做的任务，就很像游戏里的每日任务。',
+      '脑子里能想到的只有共鸣二字。',
+      '我对学习的认知，是从语言开始的。',
+    ];
+
+    var DEEP_POOL = [
+      '同龄人没人主动记得我的生日。',
+      '火车开动的那一瞬间，一小个阶段切切实实的结束了。',
+      '一会见。明天见。放假见。过年见。明年见。',
+      '我想找到属于我的光芒，但我却成为了别人的光芒。',
+      '要做就好好做，往最好做。好吗？',
+      'You look lonely, I can fix that.',
+      '恨你的人更恨你了，而爱你的人不在了。',
+      '每天都要比上一天强一点。',
+      '世界上大多数人都是傻的，但这不妨碍我去爱他们。',
+      '我不断的挑衅亲近信任的人，不断伤害他们。',
+      '小孩子对大人们应该宽宏大量。',
+      '一直往前跑，也不会跑出多远的。',
+      '我还是选择给我的画加上画框，让她显得不是那么悲伤。',
+      '我好容易看不起别人。',
+      '我要大学毕业了，但是我觉得我没有一技之长。',
+      '我什么时候感受到幸福呢？',
+      '人，到底怎么才能从生存的漩涡里爬出来呢？',
+      'I need to be more aggressive and agency.',
+      '众生相。',
+      '我们并不从经验本身中学习，我们从对经验的反思中学习。',
     ];
     /* ========================================================== */
+
+    function pickRandom(pool, n) {
+      var shuffled = pool.slice();
+      for (var i = shuffled.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+      }
+      return shuffled.slice(0, Math.min(n, shuffled.length));
+    }
 
     var visits = 0;
     try {
@@ -38,23 +95,24 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
       visits = d.count || 0;
     } catch(e) {}
 
-    var fragments = BASE_FRAGMENTS.slice();
-    if (visits >= 3) fragments = fragments.concat(EXTRA_FRAGMENTS);
+    var fragments = pickRandom(BASE_POOL, 5);
+    if (visits >= 3) fragments = fragments.concat(pickRandom(EXTRA_POOL, 4));
+    if (visits >= 6) fragments = fragments.concat(pickRandom(DEEP_POOL, 4));
 
     var root = document.getElementById('depths-root');
     if (!root) return;
 
     // --- Zone grid layout (3×3, skip zone 7 = bottom-center for core link) ---
     var zones = [
-      { left: [5, 28],  top: [8, 28] },   // 0: top-left
-      { left: [33, 62], top: [5, 25] },    // 1: top-center
-      { left: [67, 90], top: [8, 28] },    // 2: top-right
-      { left: [3, 28],  top: [33, 55] },   // 3: mid-left
-      { left: [35, 60], top: [30, 52] },   // 4: mid-center
-      { left: [65, 92], top: [33, 55] },   // 5: mid-right
-      { left: [5, 30],  top: [60, 80] },   // 6: bottom-left
+      { left: [5, 28],  top: [8, 28] },
+      { left: [33, 62], top: [5, 25] },
+      { left: [67, 90], top: [8, 28] },
+      { left: [3, 28],  top: [33, 55] },
+      { left: [35, 60], top: [30, 52] },
+      { left: [65, 92], top: [33, 55] },
+      { left: [5, 30],  top: [60, 80] },
       // zone 7 (bottom-center) RESERVED for core link
-      { left: [65, 90], top: [60, 80] },   // 8: bottom-right
+      { left: [65, 90], top: [60, 80] },
     ];
 
     // Shuffle zone assignment
@@ -74,7 +132,6 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
       el.textContent = text;
       el.style.left = rand(zone.left[0], zone.left[1]) + '%';
       el.style.top = rand(zone.top[0], zone.top[1]) + '%';
-      // Each fragment gets a unique drift speed
       var duration = (6 + Math.random() * 6).toFixed(1);
       var delay = (Math.random() * -10).toFixed(1);
       el.style.animationDuration = duration + 's';
@@ -83,7 +140,7 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
       setTimeout(function() { el.classList.add('visible'); }, 600 + i * 700);
     });
 
-    // Core link — only if enough visits, always bottom-center (protected zone)
+    // Core link — only if enough visits
     if (visits >= 8) {
       var link = document.createElement('a');
       link.href = '/depths/core';
