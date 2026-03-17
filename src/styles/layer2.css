@@ -16,7 +16,7 @@
   z-index: 1;
 }
 
-/* Floating text fragments */
+/* Floating text fragments — drift in deep water */
 .fragment {
   position: absolute;
   opacity: 0;
@@ -25,6 +25,9 @@
   user-select: none;
   font-size: 0.9rem;
   color: var(--depths-text-dim);
+  animation: drift linear infinite;
+  animation-play-state: running;
+  will-change: transform;
 }
 
 .fragment.visible {
@@ -35,13 +38,35 @@
   color: var(--depths-text-bright);
 }
 
-/* Core entrance */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20%      { transform: translate(2.5px, -1.5px) rotate(0.3deg); }
+  40%      { transform: translate(-1px, 2.5px) rotate(-0.25deg); }
+  60%      { transform: translate(1.5px, 1px) rotate(0.15deg); }
+  80%      { transform: translate(-2px, -1px) rotate(-0.2deg); }
+}
+
+/* Core entrance — fixed bottom-center, always above fragments */
 .core-link {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-block;
   color: var(--depths-text-dim);
   font-size: 0.8rem;
   letter-spacing: 0.15em;
-  transition: opacity var(--transition-smooth);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 2s ease, color var(--transition-smooth);
+}
+
+.core-link.visible {
+  opacity: 1;
+}
+
+.core-link:hover {
+  color: var(--depths-text-bright);
 }
 
 .core-link.flickering {
