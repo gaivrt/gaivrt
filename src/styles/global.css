@@ -1,22 +1,23 @@
 :root {
-  /* Layer 1: Surface (white) */
-  --surface-bg: #fafafa;
-  --surface-text: #1a1a1a;
-  --surface-text-secondary: #666;
-  --surface-border: #e0e0e0;
-  --surface-accent: #333;
+  /* Layer 1: Surface (warm paper white) */
+  --surface-bg: #f5f0e8;
+  --surface-text: #2a2420;
+  --surface-text-secondary: #8a7e72;
+  --surface-border: #ddd5c8;
+  --surface-accent: #8b5e3c;
 
-  /* Layer 2: Depths (black) */
-  --depths-bg: #000;
-  --depths-text: rgba(255, 255, 255, 0.7);
-  --depths-text-dim: rgba(255, 255, 255, 0.3);
-  --depths-text-bright: rgba(255, 255, 255, 0.95);
+  /* Layer 2: Depths (deep warm black) */
+  --depths-bg: #0a0806;
+  --depths-text: rgba(235, 220, 200, 0.7);
+  --depths-text-dim: rgba(235, 220, 200, 0.3);
+  --depths-text-bright: rgba(245, 235, 220, 0.95);
 
   /* Shared */
   --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Cormorant Garamond', '华文中宋', 'STZhongsong', serif;
+  --font-body: '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
+  --font-serif: '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -63,5 +64,5 @@ img, video, svg {
 }
 
 ::selection {
-  background: rgba(100, 120, 160, 0.2);
+  background: rgba(180, 160, 120, 0.25);
 }

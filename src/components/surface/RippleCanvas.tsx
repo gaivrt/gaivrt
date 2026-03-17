@@ -76,7 +76,7 @@ export default function RippleCanvas() {
             position: 'fixed',
             inset: '0',
             'pointer-events': 'none',
-            background: `radial-gradient(circle 120px at ${mousePos().x}px ${mousePos().y}px, rgba(0,0,0,0.12), transparent)`,
+            background: `radial-gradient(circle 120px at ${mousePos().x}px ${mousePos().y}px, rgba(60,50,35,0.12), transparent)`,
           }}
         />
       )}

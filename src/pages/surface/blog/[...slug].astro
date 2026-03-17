@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Layer1Layout from '../../../layouts/Layer1Layout.astro';
-import NavBar from '../../../components/surface/NavBar.astro';
+import BackLink from '../../../components/surface/BackLink.astro';
 import TableOfContents from '../../../components/surface/TableOfContents.astro';
 
 export async function getStaticPaths() {
@@ -18,10 +18,7 @@ const { Content, headings } = await render(post);
 
 <Layer1Layout title={`${post.data.title} — GAIVRT`}>
   <div class="surface-container">
-    <header class="surface-header">
-      <NavBar currentPath={Astro.url.pathname} />
-    </header>
-
+    <BackLink />
     <main>
       <div class="article-layout">
         <article class="prose">

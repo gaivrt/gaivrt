@@ -15,5 +15,5 @@ void main() {
   float erosionAlpha = data.g * 0.0;
 
   float alpha = clamp(waveAlpha + erosionAlpha, 0.0, 1.0);
-  gl_FragColor = vec4(0.0, 0.0, 0.0, alpha);
+  gl_FragColor = vec4(0.04, 0.03, 0.02, alpha);
 }

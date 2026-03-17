@@ -1,47 +1,37 @@
 ---
 import Layer1Layout from '../../layouts/Layer1Layout.astro';
-import NavBar from '../../components/surface/NavBar.astro';
-import BreathingCard from '../../components/surface/BreathingCard.astro';
 import ObserverText from '../../components/surface/ObserverText.astro';
+
+const toc = [
+  { href: '/surface/blog', title: 'Blog', desc: '随想与记录' },
+  { href: '/surface/research', title: 'Research', desc: '研究方向' },
+  { href: '/surface/projects', title: 'Projects', desc: '开源项目' },
+  { href: '/surface/publications', title: 'Publications', desc: '发表论文' },
+  { href: '/surface/cv', title: 'CV', desc: '个人简历' },
+];
 ---
 
 <Layer1Layout title="GAIVRT — Home">
   <div class="surface-container">
-    <header class="surface-header">
-      <NavBar currentPath={Astro.url.pathname} />
-    </header>
-
     <main>
       <section class="hero">
-        <img src="/images/avatar.png" alt="GAIVRT" class="avatar" />
-        <h1>GAIVRT</h1>
-        <p class="hero-subtitle">Researcher · Builder · Explorer</p>
+        <img src="/images/avatar.png" alt="GAIVRT" class="hero-avatar" />
+        <h1 class="hero-name">GAIVRT</h1>
+        <p class="hero-role">Researcher&ensp;·&ensp;Builder&ensp;·&ensp;Explorer</p>
         <p class="hero-bio">
-          Exploring the intersection of technology and human experience.
+          Exploring the intersection of<br />technology and human experience.
         </p>
       </section>
 
-      <section class="surface-section">
-        <h2 class="surface-section-title">Featured</h2>
-        <div class="card-grid-wrapper">
-          <div class="card-grid">
-            <BreathingCard
-              title="Blog"
-              description="Thoughts, notes, and things I find interesting."
-              href="/surface/blog"
-            />
-            <BreathingCard
-              title="Research"
-              description="Current research interests and ongoing projects."
-              href="/surface/research"
-            />
-            <BreathingCard
-              title="Projects"
-              description="Open source and personal projects."
-              href="/surface/projects"
-            />
-          </div>
-        </div>
+      <section class="toc">
+        <nav class="toc-grid" aria-label="Site sections">
+          {toc.map((item, i) => (
+            <a href={item.href} class="toc-row" style={`--i: ${i}`}>
+              <span class="toc-title">{item.title}</span>
+              <span class="toc-desc">{item.desc}</span>
+            </a>
+          ))}
+        </nav>
       </section>
     </main>
   </div>
@@ -50,36 +40,144 @@ import ObserverText from '../../components/surface/ObserverText.astro';
 </Layer1Layout>
 
 <style>
+  @keyframes heroReveal {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes tocReveal {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── Hero ── */
   .hero {
-    padding: var(--space-lg) 0 var(--space-xl);
+    text-align: center;
+    padding: 15vh 0 10vh;
+    position: relative;
   }
 
-  .avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 4px;
+  .hero-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 6px;
     object-fit: cover;
-    margin-bottom: var(--space-lg);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 2px solid var(--surface-border);
+    margin: 0 auto 2rem;
+    display: block;
+    opacity: 0;
+    animation: heroReveal 1.2s ease forwards;
+    animation-delay: 0.1s;
   }
 
-  .hero h1 {
-    font-size: 3rem;
-    letter-spacing: 0.15em;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  .hero-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--surface-text);
+    opacity: 0;
+    animation: heroReveal 1.2s ease forwards;
+    animation-delay: 0.25s;
   }
 
-  .hero-subtitle {
-    font-size: 1.1rem;
+  .hero-role {
+    font-family: var(--font-display);
+    font-size: clamp(0.8rem, 1.6vw, 0.95rem);
+    font-weight: 400;
+    font-style: italic;
     color: var(--surface-text-secondary);
-    margin-top: var(--space-sm);
+    letter-spacing: 0.1em;
+    margin-top: 0.8rem;
+    opacity: 0;
+    animation: heroReveal 1.2s ease forwards;
+    animation-delay: 0.4s;
+  }
+
+  /* Decorative rule below role */
+  .hero-role::after {
+    content: '';
+    display: block;
+    width: clamp(40px, 12vw, 100px);
+    height: 1px;
+    background: var(--surface-border);
+    margin: 2.5rem auto;
+    opacity: 0;
+    animation: heroReveal 1.2s ease forwards;
+    animation-delay: 0.5s;
   }
 
   .hero-bio {
-    margin-top: var(--space-md);
-    max-width: var(--content-width);
+    font-size: 0.88rem;
     color: var(--surface-text-secondary);
+    max-width: 340px;
+    margin: 0 auto;
+    line-height: 1.9;
+    opacity: 0;
+    animation: heroReveal 1.2s ease forwards;
+    animation-delay: 0.6s;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    width: clamp(260px, 55vw, 380px);
+    margin: 0 auto;
+    padding-bottom: 16vh;
+  }
+
+  .toc-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .toc-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 1.5rem;
+    align-items: center;
+    padding: 0.65rem 0;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid transparent;
+    opacity: 0;
+    animation: tocReveal 0.6s ease forwards;
+    animation-delay: calc(0.8s + var(--i) * 0.06s);
+    transition: border-color var(--transition-smooth);
+  }
+
+  .toc-row:hover {
+    border-bottom-color: var(--surface-border);
+  }
+
+  .toc-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    transition: color var(--transition-smooth),
+                letter-spacing var(--transition-smooth);
+  }
+
+  .toc-desc {
+    font-size: 0.78rem;
+    color: var(--surface-text-secondary);
+    text-align: right;
+    transition: color var(--transition-smooth);
+  }
+
+  .toc-row:hover .toc-title {
+    color: var(--surface-accent);
+    letter-spacing: 0.1em;
+  }
+
+  .toc-row:hover .toc-desc {
+    color: var(--surface-text);
+  }
+
+  @media (max-width: 480px) {
+    .hero { padding: 14vh 0 8vh; }
+    .toc { padding-bottom: 10vh; }
+    .toc-row { grid-template-columns: 1fr; gap: 0.15rem 0; }
+    .toc-desc { text-align: left; }
   }
 </style>

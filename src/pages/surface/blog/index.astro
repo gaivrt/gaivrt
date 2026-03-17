@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layer1Layout from '../../../layouts/Layer1Layout.astro';
-import NavBar from '../../../components/surface/NavBar.astro';
+import BackLink from '../../../components/surface/BackLink.astro';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
@@ -9,10 +9,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 
 <Layer1Layout title="Blog — GAIVRT">
   <div class="surface-container">
-    <header class="surface-header">
-      <NavBar currentPath={Astro.url.pathname} />
-    </header>
-
+    <BackLink />
     <main>
       <h1>Blog</h1>
       <p class="blog-intro">Thoughts on technology, research, and building things.</p>
@@ -45,7 +42,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 </Layer1Layout>
 
 <style>
-  h1 { margin: var(--space-xl) 0 var(--space-sm); }
+  h1 { margin: 0 0 var(--space-sm); }
 
   .blog-intro {
     color: var(--surface-text-secondary);

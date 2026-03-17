@@ -15,18 +15,21 @@ const links = [
 ];
 ---
 
-<nav class="nav">
+<nav class="nav" aria-label="Primary navigation">
   <a href="/surface/" class="nav-brand">GAIVRT</a>
   <ul class="nav-links">
-    {links.map(link => (
-      <li>
-        <a
-          href={link.href}
-          class:list={['nav-link', { active: currentPath.startsWith(link.href) }]}
-        >
-          {link.label}
-        </a>
-      </li>
+    {links.map((link, i) => (
+      <>
+        {i > 0 && <li class="nav-sep" aria-hidden="true">·</li>}
+        <li>
+          <a
+            href={link.href}
+            class:list={['nav-link', { active: currentPath.startsWith(link.href) }]}
+          >
+            {link.label}
+          </a>
+        </li>
+      </>
     ))}
   </ul>
 </nav>
@@ -34,43 +37,56 @@ const links = [
 <style>
   .nav {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: var(--space-md) 0;
-    max-width: var(--page-width);
-    margin: 0 auto;
+    padding: var(--space-sm) 0;
+    gap: var(--space-sm);
   }
 
   .nav-brand {
-    font-weight: 600;
-    font-size: 1.1rem;
-    letter-spacing: 0.1em;
-    transition: text-shadow var(--transition-smooth);
-  }
-
-  .nav-brand:hover {
-    text-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
   }
 
   .nav-links {
     display: flex;
-    gap: var(--space-lg);
+    gap: 0.4rem;
     list-style: none;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .nav-sep {
+    color: var(--surface-text-secondary);
+    opacity: 0.35;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
   }
 
   .nav-link {
-    font-size: 0.9rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
     color: var(--surface-text-secondary);
+    letter-spacing: 0.04em;
     transition: color var(--transition-smooth);
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
   }
 
-  .nav-link:hover,
+  .nav-link:hover {
+    color: var(--surface-accent);
+    text-decoration-color: var(--surface-accent);
+  }
+
   .nav-link.active {
     color: var(--surface-text);
   }
 
-  @media (max-width: 640px) {
-    .nav { flex-direction: column; gap: var(--space-sm); }
-    .nav-links { gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
+  @media (max-width: 480px) {
+    .nav-links { gap: 0.3rem; }
   }
 </style>

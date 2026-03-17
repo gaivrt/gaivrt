@@ -2,12 +2,25 @@
 
 .surface {
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(200, 210, 230, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(200, 200, 220, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 0%, rgba(200, 185, 160, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(190, 175, 155, 0.1) 0%, transparent 50%),
     var(--surface-bg);
   color: var(--surface-text);
   min-height: 100dvh;
   position: relative;
+}
+
+/* Paper grain texture overlay */
+.surface::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
 .surface-container {
@@ -21,10 +34,13 @@
   top: 0;
   z-index: 100;
   padding: var(--space-lg) 0;
-  background: rgba(250, 250, 250, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(245, 240, 232, 0.92);
+  border-bottom: 1px solid rgba(60, 50, 35, 0.08);
+  /* Break out of container to span full viewport */
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  padding-left: calc(50vw - 50%);
+  padding-right: calc(50vw - 50%);
 }
 
 .surface-section {
@@ -58,9 +74,9 @@
   right: 5%;
   bottom: 70px;
   background:
-    radial-gradient(ellipse at 15% 50%, rgba(0, 0, 0, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 85% 40%, rgba(0, 0, 0, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 80%, rgba(0, 0, 0, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse at 15% 50%, rgba(80, 60, 30, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 40%, rgba(80, 60, 30, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 80%, rgba(80, 60, 30, 0.04) 0%, transparent 50%);
   z-index: 0;
   pointer-events: none;
 }
@@ -75,7 +91,7 @@
   height: 60px;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.03) 0%,
+    rgba(80, 60, 30, 0.03) 0%,
     transparent 100%
   );
   filter: blur(3px);
@@ -90,17 +106,15 @@
   z-index: 1;
 }
 
-/* Breathing card — frosted glass */
+/* Breathing card — warm paper */
 .breathing-card {
   padding: var(--space-lg);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(180, 165, 140, 0.2);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  background: rgba(240, 235, 225, 0.85);
   box-shadow:
-    0 1px 4px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 2px 8px rgba(60, 50, 35, 0.06),
+    inset 0 1px 0 rgba(245, 240, 232, 0.6);
   position: relative;
   overflow: hidden;
   transition:
@@ -111,6 +125,6 @@
 .breathing-card:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 6px 20px rgba(60, 50, 35, 0.1),
+    inset 0 1px 0 rgba(245, 240, 232, 0.6);
 }

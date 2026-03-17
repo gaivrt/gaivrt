@@ -1,4 +1,4 @@
-/* Layer 2: Depths — black abyss theme */
+/* Layer 2: Depths — deep warm abyss theme */
 
 .depths {
   background: var(--depths-bg);
@@ -74,26 +74,26 @@
 
 /* --- Depths: markdown prose overrides for dark theme --- */
 .depths .prose blockquote {
-  border-left-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  border-left-color: rgba(235, 220, 200, 0.15);
+  background: rgba(235, 220, 200, 0.03);
   color: var(--depths-text);
 }
 
 .depths .prose code {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(235, 220, 200, 0.08);
 }
 
 .depths .prose th,
 .depths .prose td {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(235, 220, 200, 0.1);
 }
 
 .depths .prose th {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(235, 220, 200, 0.06);
 }
 
 .depths .prose tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(235, 220, 200, 0.03);
 }
 
 .depths .prose mark {
@@ -101,12 +101,12 @@
 }
 
 .depths .prose .footnotes {
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(235, 220, 200, 0.1);
   color: var(--depths-text-dim);
 }
 
 .depths .prose .task-list-item input[type="checkbox"] {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(235, 220, 200, 0.25);
 }
 
 .depths .prose .task-list-item input[type="checkbox"]:checked {
@@ -115,11 +115,11 @@
 }
 
 .depths .prose .task-list-item input[type="checkbox"]:checked::after {
-  color: #000;
+  color: var(--depths-bg);
 }
 
 .depths .prose hr {
-  border-top-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(235, 220, 200, 0.1);
 }
 
 .depths .heading-anchor {
@@ -127,8 +127,8 @@
 }
 
 .depths .callout {
-  background: rgba(255, 255, 255, 0.03);
-  border-left-color: rgba(255, 255, 255, 0.15);
+  background: rgba(235, 220, 200, 0.03);
+  border-left-color: rgba(235, 220, 200, 0.15);
 }
 
 .depths .callout-note  { border-left-color: #448aff; }
