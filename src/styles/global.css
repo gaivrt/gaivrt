@@ -1,0 +1,67 @@
+:root {
+  /* Layer 1: Surface (white) */
+  --surface-bg: #fafafa;
+  --surface-text: #1a1a1a;
+  --surface-text-secondary: #666;
+  --surface-border: #e0e0e0;
+  --surface-accent: #333;
+
+  /* Layer 2: Depths (black) */
+  --depths-bg: #000;
+  --depths-text: rgba(255, 255, 255, 0.7);
+  --depths-text-dim: rgba(255, 255, 255, 0.3);
+  --depths-text-bright: rgba(255, 255, 255, 0.95);
+
+  /* Shared */
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+  --space-2xl: 8rem;
+
+  /* Layout */
+  --content-width: 720px;
+  --page-width: 1080px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: 1.7;
+  min-height: 100dvh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img, video, svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(100, 120, 160, 0.2);
+}

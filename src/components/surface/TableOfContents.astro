@@ -1,0 +1,176 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  variant?: 'inline' | 'sidebar';
+}
+
+const { headings, variant = 'inline' } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{tocHeadings.length > 0 && variant === 'inline' && (
+  <details class="toc-inline">
+    <summary>目录</summary>
+    <nav>
+      <ul>
+        {tocHeadings.map((h) => (
+          <li class={h.depth === 3 ? 'toc-h3' : ''}>
+            <a href={`#${h.slug}`}>{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </details>
+)}
+
+{tocHeadings.length > 0 && variant === 'sidebar' && (
+  <nav class="toc-sidebar" aria-label="Table of Contents">
+    <p class="toc-title">目录</p>
+    <ul>
+      {tocHeadings.map((h) => (
+        <li class={h.depth === 3 ? 'toc-h3' : ''}>
+          <a href={`#${h.slug}`} data-slug={h.slug}>{h.text}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  /* --- Mobile inline TOC --- */
+  .toc-inline {
+    margin-bottom: var(--space-lg);
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.85rem;
+  }
+
+  .toc-inline summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--surface-text-secondary);
+  }
+
+  .toc-inline nav {
+    margin-top: var(--space-sm);
+  }
+
+  .toc-inline ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .toc-inline li {
+    padding: 0.2em 0;
+  }
+
+  .toc-inline .toc-h3 {
+    padding-left: var(--space-md);
+  }
+
+  .toc-inline a {
+    color: var(--surface-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-smooth);
+  }
+
+  .toc-inline a:hover {
+    color: var(--surface-text);
+  }
+
+  /* --- Desktop sidebar TOC --- */
+  .toc-sidebar {
+    position: sticky;
+    top: var(--space-xl);
+    max-height: calc(100dvh - var(--space-2xl));
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .toc-sidebar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .toc-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--surface-text-secondary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .toc-sidebar ul {
+    list-style: none;
+    padding: 0;
+    border-left: 1px solid var(--surface-border);
+  }
+
+  .toc-sidebar li {
+    padding: 0.2em 0 0.2em var(--space-md);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .toc-sidebar .toc-h3 {
+    padding-left: calc(var(--space-md) + var(--space-sm));
+  }
+
+  .toc-sidebar a {
+    color: var(--surface-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-smooth);
+  }
+
+  .toc-sidebar a:hover,
+  .toc-sidebar a.active {
+    color: var(--surface-text);
+  }
+
+  .toc-sidebar a.active {
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  function initScrollSpy() {
+    const links = document.querySelectorAll<HTMLAnchorElement>('.toc-sidebar a[data-slug]');
+    if (links.length === 0) return;
+
+    const slugs = Array.from(links).map((a) => a.dataset.slug!);
+    const headingEls = slugs
+      .map((s) => document.getElementById(s))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (headingEls.length === 0) return;
+
+    let current = slugs[0];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            current = entry.target.id;
+            break;
+          }
+        }
+        links.forEach((a) => {
+          a.classList.toggle('active', a.dataset.slug === current);
+        });
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+    );
+
+    headingEls.forEach((el) => observer.observe(el));
+  }
+
+  initScrollSpy();
+  document.addEventListener('astro:after-swap', initScrollSpy);
+</script>

@@ -1,0 +1,76 @@
+---
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+const links = [
+  { href: '/surface/', label: 'Home' },
+  { href: '/surface/research', label: 'Research' },
+  { href: '/surface/publications', label: 'Publications' },
+  { href: '/surface/projects', label: 'Projects' },
+  { href: '/surface/blog', label: 'Blog' },
+  { href: '/surface/cv', label: 'CV' },
+];
+---
+
+<nav class="nav">
+  <a href="/surface/" class="nav-brand">GAIVRT</a>
+  <ul class="nav-links">
+    {links.map(link => (
+      <li>
+        <a
+          href={link.href}
+          class:list={['nav-link', { active: currentPath.startsWith(link.href) }]}
+        >
+          {link.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) 0;
+    max-width: var(--page-width);
+    margin: 0 auto;
+  }
+
+  .nav-brand {
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    transition: text-shadow var(--transition-smooth);
+  }
+
+  .nav-brand:hover {
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--space-lg);
+    list-style: none;
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+    color: var(--surface-text-secondary);
+    transition: color var(--transition-smooth);
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--surface-text);
+  }
+
+  @media (max-width: 640px) {
+    .nav { flex-direction: column; gap: var(--space-sm); }
+    .nav-links { gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
+  }
+</style>

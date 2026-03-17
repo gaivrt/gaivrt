@@ -1,0 +1,32 @@
+---
+/**
+ * Core — the final destination.
+ * Pure black. After 5 seconds: "你来了"
+ */
+import Layer2Layout from '../../layouts/Layer2Layout.astro';
+---
+
+<Layer2Layout title="Core — GAIVRT">
+  <div class="core-message" id="core-msg">你来了</div>
+</Layer2Layout>
+
+<script is:inline>
+  (function() {
+    // Only accessible with enough visits
+    var visits = 0;
+    try {
+      var d = JSON.parse(localStorage.getItem('gaivrt_visits') || '{}');
+      visits = d.count || 0;
+    } catch {}
+
+    if (visits < 10) {
+      window.location.replace('/depths/');
+      return;
+    }
+
+    setTimeout(function() {
+      var el = document.getElementById('core-msg');
+      if (el) el.classList.add('revealed');
+    }, 5000);
+  })();
+</script>

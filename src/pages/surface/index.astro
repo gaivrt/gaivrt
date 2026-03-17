@@ -1,0 +1,85 @@
+---
+import Layer1Layout from '../../layouts/Layer1Layout.astro';
+import NavBar from '../../components/surface/NavBar.astro';
+import BreathingCard from '../../components/surface/BreathingCard.astro';
+import ObserverText from '../../components/surface/ObserverText.astro';
+---
+
+<Layer1Layout title="GAIVRT — Home">
+  <div class="surface-container">
+    <header class="surface-header">
+      <NavBar currentPath={Astro.url.pathname} />
+    </header>
+
+    <main>
+      <section class="hero">
+        <img src="/images/avatar.png" alt="GAIVRT" class="avatar" />
+        <h1>GAIVRT</h1>
+        <p class="hero-subtitle">Researcher · Builder · Explorer</p>
+        <p class="hero-bio">
+          Exploring the intersection of technology and human experience.
+        </p>
+      </section>
+
+      <section class="surface-section">
+        <h2 class="surface-section-title">Featured</h2>
+        <div class="card-grid-wrapper">
+          <div class="card-grid">
+            <BreathingCard
+              title="Blog"
+              description="Thoughts, notes, and things I find interesting."
+              href="/surface/blog"
+            />
+            <BreathingCard
+              title="Research"
+              description="Current research interests and ongoing projects."
+              href="/surface/research"
+            />
+            <BreathingCard
+              title="Projects"
+              description="Open source and personal projects."
+              href="/surface/projects"
+            />
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <ObserverText />
+</Layer1Layout>
+
+<style>
+  .hero {
+    padding: var(--space-lg) 0 var(--space-xl);
+  }
+
+  .avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 4px;
+    object-fit: cover;
+    margin-bottom: var(--space-lg);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--surface-text-secondary);
+    margin-top: var(--space-sm);
+  }
+
+  .hero-bio {
+    margin-top: var(--space-md);
+    max-width: var(--content-width);
+    color: var(--surface-text-secondary);
+  }
+</style>

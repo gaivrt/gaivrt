@@ -1,0 +1,53 @@
+---
+/**
+ * Layer 0 — Particle entrance.
+ * Redirects returning visitors quickly; first-timers see the full animation.
+ * ParticleEntrance (Solid island) will be added in Phase 5.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import VisitTracker from '../components/shared/VisitTracker.astro';
+---
+
+<BaseLayout title="GAIVRT">
+  <VisitTracker />
+  <main id="entrance">
+    <canvas id="particle-canvas"></canvas>
+    <noscript>
+      <meta http-equiv="refresh" content="0;url=/surface/" />
+    </noscript>
+  </main>
+</BaseLayout>
+
+<script is:inline>
+  // Placeholder: skip to surface for now. Phase 5 adds particle animation.
+  (function() {
+    var visits = 0;
+    try {
+      var d = JSON.parse(localStorage.getItem('gaivrt_visits') || '{}');
+      visits = d.count || 0;
+    } catch {}
+    // Return visitors skip entrance
+    if (visits > 1) {
+      window.location.replace('/surface/');
+      return;
+    }
+    // First visit: brief delay then redirect (particle anim placeholder)
+    setTimeout(function() { window.location.replace('/surface/'); }, 2000);
+  })();
+</script>
+
+<style>
+  #entrance {
+    background: #000;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #particle-canvas {
+    width: 100%;
+    height: 100%;
+  }
+</style>

@@ -1,0 +1,56 @@
+---
+/**
+ * ObserverText — fourth-wall-breaking text that appears after idle.
+ * Pure inline script, no framework dependency.
+ */
+---
+
+<div id="observer-text" aria-hidden="true"></div>
+
+<script is:inline>
+  (function() {
+    const messages = [
+      '你在找什么？',
+      '还在看？',
+      '你注意到了。',
+      '大多数人不会停留这么久。',
+      '表面之下还有东西。',
+    ];
+
+    let timer = null;
+    const el = document.getElementById('observer-text');
+    if (!el) return;
+
+    function show() {
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      el.textContent = msg;
+      el.style.opacity = '1';
+      setTimeout(function() { el.style.opacity = '0'; }, 6000);
+    }
+
+    function reset() {
+      if (timer) clearTimeout(timer);
+      el.style.opacity = '0';
+      timer = setTimeout(show, 18000);
+    }
+
+    document.addEventListener('mousemove', reset);
+    document.addEventListener('keydown', reset);
+    document.addEventListener('scroll', reset);
+    timer = setTimeout(show, 18000);
+  })();
+</script>
+
+<style>
+  #observer-text {
+    position: fixed;
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+    font-size: 0.8rem;
+    color: var(--surface-text-secondary);
+    opacity: 0;
+    transition: opacity 2s ease;
+    pointer-events: none;
+    z-index: 5;
+  }
+</style>

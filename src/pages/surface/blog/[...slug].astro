@@ -1,0 +1,114 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layer1Layout from '../../../layouts/Layer1Layout.astro';
+import NavBar from '../../../components/surface/NavBar.astro';
+import TableOfContents from '../../../components/surface/TableOfContents.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<Layer1Layout title={`${post.data.title} — GAIVRT`}>
+  <div class="surface-container">
+    <header class="surface-header">
+      <NavBar currentPath={Astro.url.pathname} />
+    </header>
+
+    <main>
+      <div class="article-layout">
+        <article class="prose">
+          <header class="post-header">
+            <h1>{post.data.title}</h1>
+            <div class="post-meta">
+              <time datetime={post.data.date.toISOString()}>
+                {post.data.date.toLocaleDateString('zh-CN')}
+              </time>
+              {post.data.tags.length > 0 && (
+                <div class="post-tags">
+                  {post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+                </div>
+              )}
+            </div>
+          </header>
+          <TableOfContents headings={headings} variant="inline" />
+          <Content />
+        </article>
+        <aside class="toc-aside">
+          <TableOfContents headings={headings} variant="sidebar" />
+        </aside>
+      </div>
+      <a href="/surface/blog" class="back-link">← 返回 Blog</a>
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  .article-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+
+  .toc-aside {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .article-layout {
+      grid-template-columns: minmax(0, var(--content-width)) 240px;
+      max-width: calc(var(--content-width) + 240px + var(--space-xl));
+    }
+
+    .toc-aside {
+      display: block;
+    }
+  }
+
+  .post-header {
+    margin-bottom: var(--space-xl);
+  }
+
+  .post-header h1 {
+    margin-bottom: var(--space-sm);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    color: var(--surface-text-secondary);
+    font-size: 0.85rem;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: var(--space-xs);
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: var(--space-xl);
+    font-size: 0.85rem;
+    color: var(--surface-text-secondary);
+    transition: color var(--transition-smooth);
+  }
+
+  .back-link:hover {
+    color: var(--surface-text);
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+/**
+ * Layer 2 — Depths index.
+ * Floating text fragments, progressively unlocked by visit count.
+ */
+import Layer2Layout from '../../layouts/Layer2Layout.astro';
+---
+
+<Layer2Layout title="Depths — GAIVRT">
+  <div class="depths-container" id="depths-root">
+    <p class="depths-hint">你沉了下来。</p>
+  </div>
+</Layer2Layout>
+
+<script is:inline>
+  (function() {
+    var baseFragments = [
+      '有些东西不在表面。',
+      '你为什么来这里？',
+      '继续。',
+      '不是所有人都会找到这里。',
+    ];
+
+    var extraFragments = [
+      '你开始理解了。',
+      '表面只是开始。',
+      '每一次回来，都会看到更多。',
+    ];
+
+    var visits = 0;
+    try {
+      var d = JSON.parse(localStorage.getItem('gaivrt_visits') || '{}');
+      visits = d.count || 0;
+    } catch {}
+
+    var fragments = baseFragments.slice();
+    if (visits >= 3) fragments = fragments.concat(extraFragments);
+
+    var root = document.getElementById('depths-root');
+    if (!root) return;
+
+    fragments.forEach(function(text, i) {
+      var el = document.createElement('div');
+      el.className = 'fragment';
+      el.textContent = text;
+      el.style.left = (10 + Math.random() * 70) + '%';
+      el.style.top = (15 + i * 12 + Math.random() * 5) + '%';
+      root.appendChild(el);
+      setTimeout(function() { el.classList.add('visible'); }, 500 + i * 800);
+    });
+
+    // Core link — only if enough visits
+    if (visits >= 8) {
+      var link = document.createElement('a');
+      link.href = '/depths/core';
+      link.className = 'core-link' + (visits < 10 ? ' flickering' : '');
+      link.textContent = '更深处';
+      link.style.position = 'absolute';
+      link.style.bottom = '10%';
+      link.style.left = '50%';
+      link.style.transform = 'translateX(-50%)';
+      root.appendChild(link);
+    }
+  })();
+</script>
+
+<style>
+  .depths-hint {
+    text-align: center;
+    padding-top: 40vh;
+    font-size: 1rem;
+    color: var(--depths-text-dim);
+    animation: fadeIn 3s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>

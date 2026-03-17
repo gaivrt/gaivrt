@@ -1,0 +1,137 @@
+/* Layer 2: Depths — black abyss theme */
+
+.depths {
+  background: var(--depths-bg);
+  color: var(--depths-text);
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+}
+
+.depths-container {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  position: relative;
+  z-index: 1;
+}
+
+/* Floating text fragments */
+.fragment {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 2s ease;
+  cursor: default;
+  user-select: none;
+  font-size: 0.9rem;
+  color: var(--depths-text-dim);
+}
+
+.fragment.visible {
+  opacity: 1;
+}
+
+.fragment:hover {
+  color: var(--depths-text-bright);
+}
+
+/* Core entrance */
+.core-link {
+  display: inline-block;
+  color: var(--depths-text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  transition: opacity var(--transition-smooth);
+}
+
+.core-link.flickering {
+  animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+  73% { opacity: 0.1; }
+  86% { opacity: 0.35; }
+}
+
+/* Core page */
+.core-message {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--depths-text-bright);
+  opacity: 0;
+  transition: opacity 3s ease;
+}
+
+.core-message.revealed {
+  opacity: 1;
+}
+
+/* --- Depths: markdown prose overrides for dark theme --- */
+.depths .prose blockquote {
+  border-left-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--depths-text);
+}
+
+.depths .prose code {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.depths .prose th,
+.depths .prose td {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.depths .prose th {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.depths .prose tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.depths .prose mark {
+  background: rgba(255, 224, 0, 0.2);
+}
+
+.depths .prose .footnotes {
+  border-top-color: rgba(255, 255, 255, 0.1);
+  color: var(--depths-text-dim);
+}
+
+.depths .prose .task-list-item input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.depths .prose .task-list-item input[type="checkbox"]:checked {
+  background: var(--depths-text-bright);
+  border-color: var(--depths-text-bright);
+}
+
+.depths .prose .task-list-item input[type="checkbox"]:checked::after {
+  color: #000;
+}
+
+.depths .prose hr {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.depths .heading-anchor {
+  color: var(--depths-text-dim);
+}
+
+.depths .callout {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: rgba(255, 255, 255, 0.15);
+}
+
+.depths .callout-note  { border-left-color: #448aff; }
+.depths .callout-tip   { border-left-color: #00c853; }
+.depths .callout-warning   { border-left-color: #ff9100; }
+.depths .callout-important { border-left-color: #ff5252; }

@@ -1,0 +1,19 @@
+---
+/**
+ * VisitTracker — inline script that records visits on page load.
+ * No framework dependency, runs immediately.
+ */
+---
+
+<script is:inline>
+  (function() {
+    const KEY = 'gaivrt_visits';
+    try {
+      const raw = localStorage.getItem(KEY);
+      const data = raw ? JSON.parse(raw) : { count: 0, firstVisit: Date.now(), lastVisit: Date.now() };
+      data.count++;
+      data.lastVisit = Date.now();
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch {}
+  })();
+</script>

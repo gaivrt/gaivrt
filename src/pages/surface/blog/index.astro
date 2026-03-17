@@ -1,0 +1,114 @@
+---
+import { getCollection } from 'astro:content';
+import Layer1Layout from '../../../layouts/Layer1Layout.astro';
+import NavBar from '../../../components/surface/NavBar.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Layer1Layout title="Blog — GAIVRT">
+  <div class="surface-container">
+    <header class="surface-header">
+      <NavBar currentPath={Astro.url.pathname} />
+    </header>
+
+    <main>
+      <h1>Blog</h1>
+      <p class="blog-intro">Thoughts on technology, research, and building things.</p>
+      <div class="post-list">
+        {posts.length === 0 ? (
+          <p class="empty">No posts yet. Check back soon.</p>
+        ) : (
+          <ul>
+            {posts.map((post) => (
+              <li>
+                <a href={`/surface/blog/${post.id}`}>
+                  <span class="post-title">{post.data.title}</span>
+                  <time datetime={post.data.date.toISOString()}>
+                    {post.data.date.toLocaleDateString('zh-CN')}
+                  </time>
+                </a>
+                {post.data.description && <p class="post-desc">{post.data.description}</p>}
+                {post.data.tags.length > 0 && (
+                  <div class="post-tags">
+                    {post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  h1 { margin: var(--space-xl) 0 var(--space-sm); }
+
+  .blog-intro {
+    color: var(--surface-text-secondary);
+    margin-bottom: var(--space-xl);
+  }
+
+  .post-list { margin-bottom: var(--space-2xl); }
+
+  .post-list ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .post-list li {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  .post-list li a {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    text-decoration: none;
+  }
+
+  .post-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  .post-list li a:hover .post-title {
+    text-decoration: underline;
+  }
+
+  time {
+    font-size: 0.85rem;
+    color: var(--surface-text-secondary);
+    white-space: nowrap;
+  }
+
+  .post-desc {
+    margin-top: var(--space-xs);
+    font-size: 0.9rem;
+    color: var(--surface-text-secondary);
+  }
+
+  .post-tags {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--surface-text-secondary);
+  }
+
+  .empty {
+    color: var(--surface-text-secondary);
+    font-style: italic;
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layer2Layout from '../../../layouts/Layer2Layout.astro';
+
+export async function getStaticPaths() {
+  const thoughts = await getCollection('thoughts');
+  return thoughts.map((thought) => ({
+    params: { slug: thought.id },
+    props: { thought },
+  }));
+}
+
+const { thought } = Astro.props;
+const { Content } = await render(thought);
+---
+
+<Layer2Layout title={`${thought.data.title || 'Thought'} — GAIVRT`}>
+  <div class="depths-container">
+    <article class="prose" style="color: var(--depths-text);">
+      <Content />
+    </article>
+    <a href="/depths/" class="back-link">← 回到深处</a>
+  </div>
+</Layer2Layout>
+
+<style>
+  .back-link {
+    display: inline-block;
+    margin-top: var(--space-xl);
+    font-size: 0.85rem;
+    color: var(--depths-text-dim);
+    transition: color var(--transition-smooth);
+  }
+
+  .back-link:hover {
+    color: var(--depths-text-bright);
+  }
+</style>

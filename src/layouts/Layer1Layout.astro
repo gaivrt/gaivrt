@@ -1,0 +1,41 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import RippleCanvas from '../components/surface/RippleCanvas.tsx';
+import '../styles/layer1.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div id="ripple-mount" aria-hidden="true">
+    <RippleCanvas client:only="solid-js" />
+  </div>
+
+  <!-- SVG crack overlay -->
+  <div id="crack-overlay" aria-hidden="true"></div>
+
+  <div class="surface">
+    <slot />
+  </div>
+</BaseLayout>
+
+<style>
+  #ripple-mount {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  #crack-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+</style>

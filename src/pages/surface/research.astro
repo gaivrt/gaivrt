@@ -1,0 +1,23 @@
+---
+import Layer1Layout from '../../layouts/Layer1Layout.astro';
+import NavBar from '../../components/surface/NavBar.astro';
+---
+
+<Layer1Layout title="Research — GAIVRT">
+  <div class="surface-container">
+    <header class="surface-header">
+      <NavBar currentPath={Astro.url.pathname} />
+    </header>
+
+    <main>
+      <h1>Research</h1>
+      <div class="prose">
+        <p>Research interests and ongoing work will be listed here.</p>
+      </div>
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  h1 { margin: var(--space-xl) 0 var(--space-lg); }
+</style>
