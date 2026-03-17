@@ -10,8 +10,8 @@ export default function InkBleedOverlay() {
     const visits = getVisitCount();
 
     let delay = TIMING.INK_BLEED_DELAY;
-    if (visits > 10) delay = TIMING.INK_BLEED_DELAY / 6;
-    else if (visits > 5) delay = TIMING.INK_BLEED_DELAY / 3;
+    if (visits > 10) delay = TIMING.INK_BLEED_DELAY / 2;     // 15s
+    else if (visits > 5) delay = TIMING.INK_BLEED_DELAY * 0.6; // 18s
 
     const engine = new InkBleedEngine(containerRef, { appearDelay: delay });
 

@@ -31,21 +31,23 @@ function buildTableValues(progress: number): string {
   return values.map((v) => v.toFixed(3)).join(' ');
 }
 
-const INTERACTION_EVENTS = ['mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'mousedown'] as const;
+/** Events that count as "movement" — stains vanish */
+const MOVE_EVENTS = ['mousemove', 'keydown', 'scroll', 'touchstart', 'touchmove'] as const;
 
 export class InkBleedEngine {
   private container: HTMLElement;
   private config: InkBleedConfig;
   private svg: SVGSVGElement | null = null;
   private funcA: SVGFEFuncAElement | null = null;
+  private noiseSeed = 0;
   private delayTimer = 0;
   private revealTimer = 0;
   private revealProgress = 0;
   private started = false;
-  private spawned = false;
+  private visible = false; // stains currently showing
   private flooded = false;
   private resizeTimer = 0;
-  private interactionHandler: (() => void) | null = null;
+  private moveHandler: (() => void) | null = null;
   private clickHandler: ((e: Event) => void) | null = null;
   private resizeHandler: (() => void) | null = null;
   private focusHandler: (() => void) | null = null;
@@ -56,30 +58,45 @@ export class InkBleedEngine {
   constructor(container: HTMLElement, config?: Partial<InkBleedConfig>) {
     this.container = container;
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.noiseSeed = Math.floor(Math.random() * 999);
   }
 
   start(): void {
     if (this.started) return;
     this.started = true;
 
-    // Interaction resets the delay timer (before reveal starts)
-    this.interactionHandler = () => {
-      if (!this.spawned && !this.flooded) this.resetDelayTimer();
+    // Movement → hide stains + restart idle timer
+    this.moveHandler = () => {
+      if (this.flooded) return;
+      if (this.visible) {
+        this.hideStains();
+      }
+      this.resetDelayTimer();
     };
-    for (const evt of INTERACTION_EVENTS) {
-      document.addEventListener(evt, this.interactionHandler);
+    for (const evt of MOVE_EVENTS) {
+      document.addEventListener(evt, this.moveHandler);
     }
 
-    // Focus/blur: pause when unfocused, resume when focused
+    // Click → flood (only when stains are visible)
+    this.clickHandler = (e: Event) => {
+      if (this.flooded || !this.visible) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.flood();
+    };
+    document.addEventListener('click', this.clickHandler);
+    document.addEventListener('touchend', this.clickHandler);
+
+    // Focus/blur
     this.blurHandler = () => {
       clearTimeout(this.delayTimer);
       clearInterval(this.revealTimer);
     };
     this.focusHandler = () => {
-      if (!document.hasFocus()) return;
-      if (this.spawned && !this.flooded && this.revealProgress < 1) {
+      if (!document.hasFocus() || this.flooded) return;
+      if (this.visible && this.revealProgress < 1) {
         this.resumeReveal();
-      } else if (!this.spawned && !this.flooded) {
+      } else {
         this.resetDelayTimer();
       }
     };
@@ -92,14 +109,8 @@ export class InkBleedEngine {
     };
     window.addEventListener('resize', this.resizeHandler);
 
-    // Only proceed if page is focused
     if (!document.hasFocus()) return;
-
-    if (!this.spawned) {
-      this.resetDelayTimer();
-    } else if (!this.flooded && this.revealProgress < 1) {
-      this.resumeReveal();
-    }
+    this.resetDelayTimer();
   }
 
   stop(): void {
@@ -109,10 +120,14 @@ export class InkBleedEngine {
     clearTimeout(this.resizeTimer);
     clearInterval(this.revealTimer);
 
-    if (this.interactionHandler) {
-      for (const evt of INTERACTION_EVENTS) {
-        document.removeEventListener(evt, this.interactionHandler);
+    if (this.moveHandler) {
+      for (const evt of MOVE_EVENTS) {
+        document.removeEventListener(evt, this.moveHandler);
       }
+    }
+    if (this.clickHandler) {
+      document.removeEventListener('click', this.clickHandler);
+      document.removeEventListener('touchend', this.clickHandler);
     }
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler);
     if (this.blurHandler) window.removeEventListener('blur', this.blurHandler);
@@ -122,24 +137,48 @@ export class InkBleedEngine {
   dispose(): void {
     this.stop();
     this.removeSVG();
-    this.spawned = false;
+    this.visible = false;
     this.flooded = false;
     this.revealProgress = 0;
   }
 
   private resetDelayTimer(): void {
     clearTimeout(this.delayTimer);
-    this.delayTimer = window.setTimeout(() => this.startReveal(), this.config.appearDelay);
+    if (this.flooded) return;
+    this.delayTimer = window.setTimeout(() => this.showStains(), this.config.appearDelay);
   }
 
-  private startReveal(): void {
-    if (this.flooded || this.spawned) return;
-    this.spawned = true;
+  /** Stains appear — build SVG and start reveal animation */
+  private showStains(): void {
+    if (this.flooded || this.visible) return;
+    this.visible = true;
+    this.revealProgress = 0;
 
     const W = this.container.clientWidth || window.innerWidth;
     const H = this.container.clientHeight || window.innerHeight;
     this.buildSVG(W, H);
     this.resumeReveal();
+  }
+
+  /** Stains vanish instantly — remove SVG, reset progress */
+  private hideStains(): void {
+    if (!this.visible) return;
+    this.visible = false;
+    clearInterval(this.revealTimer);
+
+    // Quick fade out then remove
+    if (this.svg) {
+      const svg = this.svg;
+      svg.style.transition = 'opacity 250ms ease-out';
+      svg.style.opacity = '0';
+      setTimeout(() => {
+        if (svg.parentNode) svg.remove();
+      }, 260);
+      this.svg = null;
+      this.funcA = null;
+    }
+
+    this.revealProgress = 0;
   }
 
   /** Resume (or start) the reveal interval from current progress. */
@@ -151,7 +190,6 @@ export class InkBleedEngine {
     if (reducedMotion) {
       this.revealProgress = 0.6;
       this.updateThreshold();
-      this.enableInteraction();
       return;
     }
 
@@ -161,9 +199,6 @@ export class InkBleedEngine {
       this.revealProgress = Math.min(1, this.revealProgress + step);
       this.updateThreshold();
 
-      if (this.revealProgress >= 0.3 && !this.clickHandler) {
-        this.enableInteraction();
-      }
       if (this.revealProgress >= 1) {
         clearInterval(this.revealTimer);
       }
@@ -180,7 +215,7 @@ export class InkBleedEngine {
 
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:${this.config.groupOpacity};`;
+    svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;mix-blend-mode:multiply;transition:opacity 400ms ease-in;`;
 
     const defs = document.createElementNS(SVG_NS, 'defs');
 
@@ -198,7 +233,7 @@ export class InkBleedEngine {
     turbulence.setAttribute('type', 'fractalNoise');
     turbulence.setAttribute('baseFrequency', String(this.config.noiseFrequency));
     turbulence.setAttribute('numOctaves', String(this.config.noiseOctaves));
-    turbulence.setAttribute('seed', String(Math.floor(Math.random() * 999)));
+    turbulence.setAttribute('seed', String(this.noiseSeed));
     turbulence.setAttribute('stitchTiles', 'stitch');
     turbulence.setAttribute('result', 'noise');
     filter.appendChild(turbulence);
@@ -214,7 +249,7 @@ export class InkBleedEngine {
     transfer.setAttribute('result', 'threshold');
     const funcA = document.createElementNS(SVG_NS, 'feFuncA');
     funcA.setAttribute('type', 'table');
-    funcA.setAttribute('tableValues', buildTableValues(this.revealProgress));
+    funcA.setAttribute('tableValues', buildTableValues(0));
     transfer.appendChild(funcA);
     filter.appendChild(transfer);
     this.funcA = funcA;
@@ -266,75 +301,49 @@ export class InkBleedEngine {
 
     this.container.appendChild(svg);
     this.svg = svg;
-  }
 
-  private enableInteraction(): void {
-    if (!this.svg || this.flooded || this.clickHandler) return;
-
-    this.svg.style.pointerEvents = 'auto';
-    this.svg.style.cursor = 'pointer';
-
-    this.clickHandler = (e: Event) => {
-      if (this.flooded) return;
-      e.preventDefault();
-      e.stopPropagation();
-      this.flood();
-    };
-    this.svg.addEventListener('click', this.clickHandler);
-    this.svg.addEventListener('touchend', this.clickHandler);
+    // Fade in on next frame
+    requestAnimationFrame(() => {
+      if (this.svg) this.svg.style.opacity = String(this.config.groupOpacity);
+    });
   }
 
   private flood(): void {
-    if (this.flooded || !this.funcA) return;
+    if (this.flooded) return;
     this.flooded = true;
     clearInterval(this.revealTimer);
 
-    const steps = 10;
-    let step = 0;
-    const interval = window.setInterval(() => {
-      step++;
-      const t = step / steps;
-      const progress = t * t;
-      const blended = this.revealProgress + (1 - this.revealProgress) * progress;
-      this.funcA!.setAttribute('tableValues', buildTableValues(blended));
+    const dur = this.config.floodDuration;
 
-      if (step >= steps) {
-        clearInterval(interval);
-        this.funcA!.setAttribute('tableValues', '1 1 1 1 1 1 1 1 1 1');
-      }
-    }, this.config.floodDuration / steps);
+    // Dark overlay div — clean transition to depths
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `position:fixed;inset:0;z-index:9999;background:#0a0806;opacity:0;transition:opacity ${dur}ms ease-in;pointer-events:all;`;
+    document.body.appendChild(overlay);
 
     const surface = document.querySelector('.surface') as HTMLElement | null;
     if (surface) {
-      surface.style.transition = `opacity ${this.config.floodDuration}ms ease-out`;
+      surface.style.transition = `opacity ${dur}ms ease-out`;
       surface.style.opacity = '0';
     }
 
-    if (this.svg) {
-      this.svg.style.transition = `opacity ${this.config.floodDuration}ms ease-in`;
-      this.svg.style.opacity = '1';
-    }
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
 
-    setTimeout(() => this.onFlood?.(), this.config.floodDuration);
+    setTimeout(() => this.onFlood?.(), dur);
   }
 
   private handleResize(): void {
-    if (this.flooded || !this.spawned) return;
+    if (this.flooded || !this.visible) return;
     const W = this.container.clientWidth || window.innerWidth;
     const H = this.container.clientHeight || window.innerHeight;
     const savedProgress = this.revealProgress;
     this.buildSVG(W, H);
     this.revealProgress = savedProgress;
     this.updateThreshold();
-    if (this.revealProgress >= 0.3) this.enableInteraction();
   }
 
   private removeSVG(): void {
-    if (this.clickHandler && this.svg) {
-      this.svg.removeEventListener('click', this.clickHandler);
-      this.svg.removeEventListener('touchend', this.clickHandler);
-      this.clickHandler = null;
-    }
     if (this.svg) {
       this.svg.remove();
       this.svg = null;
