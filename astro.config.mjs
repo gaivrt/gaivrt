@@ -11,6 +11,7 @@ import remarkMarkHighlight from './src/plugins/remark-mark-highlight';
 import remarkVideoEmbed from './src/plugins/remark-video-embed';
 
 export default defineConfig({
+  devToolbar: { enabled: false },
   integrations: [solidJs()],
   output: 'static',
   markdown: {
