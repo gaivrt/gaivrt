@@ -1,6 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import RippleCanvas from '../components/surface/RippleCanvas.tsx';
+import InkBleedOverlay from '../components/surface/InkBleedOverlay.tsx';
 import '../styles/layer1.css';
 
 interface Props {
@@ -16,8 +17,10 @@ const { title, description } = Astro.props;
     <RippleCanvas client:only="solid-js" />
   </div>
 
-  <!-- SVG crack overlay -->
-  <div id="crack-overlay" aria-hidden="true"></div>
+  <!-- Ink bleed overlay -->
+  <div id="inkbleed-overlay" aria-hidden="true">
+    <InkBleedOverlay client:only="solid-js" />
+  </div>
 
   <div class="surface">
     <slot />
@@ -33,10 +36,11 @@ const { title, description } = Astro.props;
     mix-blend-mode: soft-light;
   }
 
-  #crack-overlay {
+  #inkbleed-overlay {
     position: fixed;
     inset: 0;
     z-index: 20;
     pointer-events: none;
+    mix-blend-mode: multiply;
   }
 </style>

@@ -12,12 +12,8 @@ export const UNLOCK = {
 
 /** Timing constants (ms) */
 export const TIMING = {
-  /** Delay before cracks appear */
-  CRACK_DELAY: 30_000,
-  /** Crack growth animation duration */
-  CRACK_GROW: 2_000,
-  /** Crack shatter animation duration */
-  CRACK_SHATTER: 800,
+  /** Delay before ink stains appear */
+  INK_BLEED_DELAY: 30_000,
   /** Observer text idle threshold */
   OBSERVER_IDLE: 18_000,
   /** Core reveal delay */
@@ -32,6 +28,8 @@ export const TIMING = {
 export const ENTRANCE = {
   /** Skip entrance entirely after this many visits */
   SKIP_THRESHOLD: 3,
+  /** Chance to show entrance again for returning visitors (0-1) */
+  REAPPEAR_CHANCE: 0.25,
   /** Display text */
   TEXT: 'GAIVRT',
   /** Font */
@@ -52,6 +50,24 @@ export const ENTRANCE = {
   CYCLE_FRAMES: 54_000,
   /** Particle skip probability (controls density) */
   SKIP_PROBABILITY: 0.78,
+} as const;
+
+/** Ink bleed transition configuration */
+export const INK_BLEED = {
+  /** feTurbulence baseFrequency (lower = larger blotches) */
+  NOISE_FREQUENCY: 0.006,
+  /** feTurbulence octaves */
+  NOISE_OCTAVES: 5,
+  /** Full reveal duration (ms) */
+  REVEAL_DURATION: 10_000,
+  /** Threshold update interval (ms) */
+  REVEAL_INTERVAL: 250,
+  /** Flood (click) expansion duration (ms) */
+  FLOOD_DURATION: 700,
+  /** Stain color */
+  STAIN_COLOR: '#1a1410',
+  /** Overall opacity for multiply blend */
+  GROUP_OPACITY: 0.5,
 } as const;
 
 /** WebGL performance thresholds */

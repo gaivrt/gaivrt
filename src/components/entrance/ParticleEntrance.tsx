@@ -15,7 +15,7 @@ export default function ParticleEntrance() {
 
   onMount(() => {
     const visits = getVisitCount();
-    if (visits > ENTRANCE.SKIP_THRESHOLD) {
+    if (visits > ENTRANCE.SKIP_THRESHOLD && Math.random() > ENTRANCE.REAPPEAR_CHANCE) {
       navigateToSurface();
       return;
     }
