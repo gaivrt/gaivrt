@@ -1,18 +1,32 @@
 ---
 /**
  * Core — the final destination.
- * Pure black. After 5 seconds: "你来了"
+ * "你来了" after 5 seconds, then thoughts list fades in.
  */
+import { getCollection } from 'astro:content';
 import Layer2Layout from '../../layouts/Layer2Layout.astro';
+
+const thoughts = (await getCollection('thoughts'))
+  .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
 ---
 
 <Layer2Layout title="Core — GAIVRT">
   <div class="core-message" id="core-msg">你来了</div>
+  <div class="thoughts-list" id="thoughts-list">
+    <div class="thoughts-divider">── 碎片 ──</div>
+    <ul>
+      {thoughts.map((t) => (
+        <li>
+          <a href={`/depths/thoughts/${t.id}`}>{t.data.title || t.id}</a>
+        </li>
+      ))}
+    </ul>
+    <a href="/depths/" class="back-link">← 回到深处</a>
+  </div>
 </Layer2Layout>
 
 <script is:inline>
   (function() {
-    // Only accessible with enough visits
     var visits = 0;
     try {
       var d = JSON.parse(localStorage.getItem('gaivrt_visits') || '{}');
@@ -24,9 +38,72 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
       return;
     }
 
+    // 5s: reveal "你来了"
     setTimeout(function() {
-      var el = document.getElementById('core-msg');
-      if (el) el.classList.add('revealed');
+      var msg = document.getElementById('core-msg');
+      if (msg) msg.classList.add('revealed');
     }, 5000);
+
+    // 8s: reveal thoughts list
+    setTimeout(function() {
+      var list = document.getElementById('thoughts-list');
+      if (list) list.classList.add('revealed');
+    }, 8000);
   })();
 </script>
+
+<style>
+  .thoughts-list {
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 3s ease;
+    z-index: 1;
+  }
+
+  .thoughts-list.revealed {
+    opacity: 1;
+  }
+
+  .thoughts-divider {
+    font-size: 0.75rem;
+    color: var(--depths-text-dim);
+    letter-spacing: 0.2em;
+    margin-bottom: var(--space-md);
+  }
+
+  .thoughts-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .thoughts-list li {
+    margin: var(--space-xs) 0;
+  }
+
+  .thoughts-list li a {
+    font-size: 0.85rem;
+    color: var(--depths-text-dim);
+    transition: color var(--transition-smooth);
+  }
+
+  .thoughts-list li a:hover {
+    color: var(--depths-text-bright);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: var(--space-lg);
+    font-size: 0.8rem;
+    color: var(--depths-text-dim);
+    transition: color var(--transition-smooth);
+  }
+
+  .back-link:hover {
+    color: var(--depths-text-bright);
+  }
+</style>

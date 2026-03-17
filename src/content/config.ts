@@ -2,7 +2,7 @@ import { defineCollection, z } from 'astro:content';
 import { r2Loader } from '../lib/r2-loader';
 
 const blog = defineCollection({
-  loader: r2Loader({ prefix: 'Blog/' }),
+  loader: r2Loader({ prefix: 'gaivrt/Blog/' }),
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
@@ -13,7 +13,7 @@ const blog = defineCollection({
 });
 
 const thoughts = defineCollection({
-  loader: r2Loader({ prefix: 'Thoughts/' }),
+  loader: r2Loader({ prefix: 'gaivrt/Thoughts/' }),
   schema: z.object({
     title: z.string().optional(),
     date: z.coerce.date().optional(),
@@ -22,4 +22,44 @@ const thoughts = defineCollection({
   }),
 });
 
-export const collections = { blog, thoughts };
+const projects = defineCollection({
+  loader: r2Loader({ prefix: 'gaivrt/Projects/' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date().optional(),
+    description: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    url: z.string().optional(),
+    github: z.string().optional(),
+  }),
+});
+
+const publications = defineCollection({
+  loader: r2Loader({ prefix: 'gaivrt/Publications/' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date().optional(),
+    authors: z.string().optional(),
+    venue: z.string().optional(),
+    url: z.string().optional(),
+  }),
+});
+
+const research = defineCollection({
+  loader: r2Loader({ prefix: 'gaivrt/Research/' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.coerce.date().optional(),
+    description: z.string().optional(),
+    status: z.string().optional(),
+  }),
+});
+
+const cv = defineCollection({
+  loader: r2Loader({ prefix: 'gaivrt/CV/' }),
+  schema: z.object({
+    title: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, thoughts, projects, publications, research, cv };

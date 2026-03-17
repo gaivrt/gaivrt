@@ -1,0 +1,66 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layer1Layout from '../../../layouts/Layer1Layout.astro';
+import BackLink from '../../../components/surface/BackLink.astro';
+
+const items = (await getCollection('projects'))
+  .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
+
+// Single item → render inline
+let InlineContent: any = null;
+if (items.length === 1) {
+  const result = await render(items[0]);
+  InlineContent = result.Content;
+}
+---
+
+<Layer1Layout title="Projects — GAIVRT">
+  <div class="surface-container">
+    <BackLink />
+    <main>
+      <h1>Projects</h1>
+      {items.length === 0 ? (
+        <p class="empty">暂无内容。</p>
+      ) : items.length === 1 ? (
+        <article class="prose">
+          <InlineContent />
+        </article>
+      ) : (
+        <ul class="item-list">
+          {items.map((item) => (
+            <li>
+              <a href={`/surface/projects/${item.id}`}>
+                <span class="item-title">{item.data.title}</span>
+                {item.data.date && (
+                  <time datetime={item.data.date.toISOString()}>
+                    {item.data.date.toLocaleDateString('zh-CN')}
+                  </time>
+                )}
+              </a>
+              {item.data.description && <p class="item-desc">{item.data.description}</p>}
+              {item.data.tags.length > 0 && (
+                <div class="item-tags">
+                  {item.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  h1 { margin: 0 0 var(--space-lg); }
+  .empty { color: var(--surface-text-secondary); font-style: italic; }
+  .item-list { list-style: none; padding: 0; }
+  .item-list li { padding: var(--space-md) 0; border-bottom: 1px solid var(--surface-border); }
+  .item-list li a { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-md); }
+  .item-title { font-size: 1.1rem; font-weight: 500; }
+  .item-list li a:hover .item-title { text-decoration: underline; }
+  time { font-size: 0.85rem; color: var(--surface-text-secondary); white-space: nowrap; }
+  .item-desc { margin-top: var(--space-xs); font-size: 0.9rem; color: var(--surface-text-secondary); }
+  .item-tags { display: flex; gap: var(--space-xs); margin-top: var(--space-xs); }
+  .tag { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: rgba(0,0,0,0.06); color: var(--surface-text-secondary); }
+</style>
