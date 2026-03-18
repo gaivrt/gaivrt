@@ -62,4 +62,11 @@ const cv = defineCollection({
   }),
 });
 
-export const collections = { blog, thoughts, projects, publications, research, cv };
+const about = defineCollection({
+  loader: r2Loader({ prefix: 'gaivrt/About/' }),
+  schema: z.object({
+    title: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, thoughts, projects, publications, research, cv, about };
