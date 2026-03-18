@@ -12,6 +12,31 @@ const { title, description } = Astro.props;
 
 <BaseLayout title={title} description={description}>
   <div class="depths">
+    <a href="/surface/" class="surface-escape">← Surface</a>
     <slot />
   </div>
 </BaseLayout>
+
+<style>
+  .surface-escape {
+    position: fixed;
+    top: var(--space-lg);
+    left: var(--space-lg);
+    z-index: 50;
+    font-size: 0.85rem;
+    color: var(--depths-text-dim);
+    text-decoration: none;
+    transition: color var(--transition-smooth);
+  }
+
+  .surface-escape:hover {
+    color: var(--depths-text-bright);
+  }
+
+  @media (max-width: 480px) {
+    .surface-escape {
+      top: var(--space-md);
+      left: var(--space-md);
+    }
+  }
+</style>
