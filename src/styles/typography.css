@@ -11,6 +11,7 @@ p + p { margin-top: var(--space-md); }
 
 .prose {
   max-width: var(--content-width);
+  overflow-wrap: break-word;
 }
 
 .prose h1 { margin: var(--space-xl) 0 var(--space-lg); }
@@ -88,6 +89,8 @@ p + p { margin-top: var(--space-md); }
   border-collapse: collapse;
   margin: var(--space-md) 0;
   font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
 }
 
 .prose th,
@@ -319,11 +322,10 @@ p + p { margin-top: var(--space-md); }
 @media (max-width: 767px) {
   .prose {
     max-width: 100%;
+    overflow-x: hidden;
   }
 
   .prose pre {
-    margin-left: calc(-1 * var(--space-md));
-    margin-right: calc(-1 * var(--space-md));
     border-radius: 0;
     font-size: 0.82em;
   }
