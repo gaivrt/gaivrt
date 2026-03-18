@@ -26,6 +26,10 @@ import ParticleEntrance from '../components/entrance/ParticleEntrance.tsx';
     inset: 0;
   }
 
+  :global([data-theme="dark"]) #entrance {
+    background: #141210;
+  }
+
   #entrance :global(astro-island) {
     display: block;
     width: 100%;
@@ -50,5 +54,9 @@ import ParticleEntrance from '../components/entrance/ParticleEntrance.tsx';
     color: rgba(80, 75, 65, 0.5);
     pointer-events: none;
     user-select: none;
+  }
+
+  :global([data-theme="dark"]) #entrance :global(.entrance-hint) {
+    color: rgba(200, 190, 175, 0.45);
   }
 </style>

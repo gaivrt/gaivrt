@@ -8,12 +8,20 @@ export default function InkBleedOverlay() {
 
   onMount(() => {
     const visits = getVisitCount();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
     let delay = TIMING.INK_BLEED_DELAY;
     if (visits > 10) delay = TIMING.INK_BLEED_DELAY / 2;     // 15s
     else if (visits > 5) delay = TIMING.INK_BLEED_DELAY * 0.6; // 18s
 
-    const engine = new InkBleedEngine(containerRef, { appearDelay: delay });
+    const engine = new InkBleedEngine(containerRef, {
+      appearDelay: delay,
+      ...(isDark && {
+        stainColor: '#d4c4a8',
+        blendMode: 'screen',
+        groupOpacity: 0.25,
+      }),
+    });
 
     engine.onFlood = () => {
       window.location.href = '/depths/';

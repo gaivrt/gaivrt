@@ -160,3 +160,20 @@
 .depths .callout-tip   { border-left-color: #00c853; }
 .depths .callout-warning   { border-left-color: #ff9100; }
 .depths .callout-important { border-left-color: #ff5252; }
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .fragment {
+    max-width: 75vw;
+    word-break: break-word;
+    font-size: 0.85rem;
+  }
+
+  .core-link {
+    bottom: 12%;
+  }
+
+  .depths-container {
+    max-width: 100%;
+  }
+}

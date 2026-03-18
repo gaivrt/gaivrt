@@ -1,0 +1,90 @@
+---
+/**
+ * Theme toggle — sun/moon icon for light/dark mode.
+ * Lightweight: inline script, no framework dependency.
+ * Shows moon in light mode (click to go dark), sun in dark mode (click to go light).
+ */
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label="切换深色模式"
+  title="切换深色模式"
+>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <circle cx="12" cy="12" r="4.5" />
+    <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+</button>
+
+<style>
+  #theme-toggle {
+    position: fixed;
+    top: var(--space-lg);
+    right: var(--space-lg);
+    z-index: 200;
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--surface-text-secondary);
+    opacity: 0.35;
+    transition: opacity var(--transition-smooth), color var(--transition-smooth);
+    line-height: 0;
+  }
+
+  #theme-toggle:hover {
+    opacity: 1;
+    color: var(--surface-accent);
+  }
+
+  #theme-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Light mode: show moon (to switch to dark) */
+  /* Dark mode: show sun (to switch to light) */
+  .icon-sun { display: none; }
+  .icon-moon { display: block; }
+
+  :global([data-theme="dark"]) .icon-sun { display: block; }
+  :global([data-theme="dark"]) .icon-moon { display: none; }
+
+  @media (max-width: 480px) {
+    #theme-toggle {
+      top: var(--space-md);
+      right: var(--space-md);
+    }
+  }
+</style>
+
+<script>
+  function initThemeToggle() {
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('gaivrt_theme', next); } catch {}
+    });
+
+    // Follow system preference changes if user hasn't explicitly chosen
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', (e) => {
+      try {
+        if (localStorage.getItem('gaivrt_theme')) return;
+      } catch {}
+      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    });
+  }
+
+  initThemeToggle();
+  document.addEventListener('astro:after-swap', initThemeToggle);
+</script>

@@ -36,6 +36,9 @@ export class ParticleText {
   /** Hook for external performance monitoring. Called each frame with timestamp. */
   onFrame?: (time: number) => void;
 
+  /** When true, darkens the canvas background for dark mode. */
+  darkMode = false;
+
   constructor(canvas: HTMLCanvasElement, config?: Partial<ParticleTextConfig>) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
@@ -194,8 +197,10 @@ export class ParticleText {
     const cycleT = (frame / config.cycleFrames) % 1;
     const blend = getBlendedPalette(cycleT);
 
-    const bgStr = `rgb(${Math.round(blend.bg[0])},${Math.round(blend.bg[1])},${Math.round(blend.bg[2])})`;
-    ctx.fillStyle = bgStr;
+    const bgR = this.darkMode ? blend.bg[0] * 0.07 + 6 : blend.bg[0];
+    const bgG = this.darkMode ? blend.bg[1] * 0.07 + 4 : blend.bg[1];
+    const bgB = this.darkMode ? blend.bg[2] * 0.07 + 2 : blend.bg[2];
+    ctx.fillStyle = `rgb(${Math.round(bgR)},${Math.round(bgG)},${Math.round(bgB)})`;
     ctx.fillRect(0, 0, W, H);
 
     const timeOff = frame * config.noiseDrift;

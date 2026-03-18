@@ -62,5 +62,9 @@ if (items.length === 1) {
   time { font-size: 0.85rem; color: var(--surface-text-secondary); white-space: nowrap; }
   .item-desc { margin-top: var(--space-xs); font-size: 0.9rem; color: var(--surface-text-secondary); }
   .item-tags { display: flex; gap: var(--space-xs); margin-top: var(--space-xs); }
-  .tag { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: rgba(0,0,0,0.06); color: var(--surface-text-secondary); }
+  .tag { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: var(--tag-bg); color: var(--surface-text-secondary); }
+
+  @media (max-width: 767px) {
+    .item-list li a { flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
+  }
 </style>
