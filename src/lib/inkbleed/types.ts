@@ -16,4 +16,6 @@ export interface InkBleedConfig {
   stainColor: string;
   /** Overall group opacity */
   groupOpacity: number;
+  /** SVG mix-blend-mode (default: 'multiply') */
+  blendMode: string;
 }

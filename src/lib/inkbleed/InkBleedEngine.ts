@@ -12,6 +12,7 @@ const DEFAULT_CONFIG: InkBleedConfig = {
   noiseOctaves: INK_BLEED.NOISE_OCTAVES,
   stainColor: INK_BLEED.STAIN_COLOR,
   groupOpacity: INK_BLEED.GROUP_OPACITY,
+  blendMode: 'multiply',
 };
 
 /** Build feFuncA tableValues string for a given reveal progress (0→1). */
@@ -215,7 +216,7 @@ export class InkBleedEngine {
 
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-    svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;mix-blend-mode:multiply;transition:opacity 400ms ease-in;`;
+    svg.style.cssText = `position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;mix-blend-mode:${this.config.blendMode};transition:opacity 400ms ease-in;`;
 
     const defs = document.createElementNS(SVG_NS, 'defs');
 

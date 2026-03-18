@@ -23,6 +23,7 @@ export default function ParticleEntrance() {
     let engine: ParticleText | null = null;
     try {
       engine = new ParticleText(canvasRef);
+      engine.darkMode = document.documentElement.getAttribute('data-theme') === 'dark';
     } catch {
       navigateToSurface();
       return;

@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import RippleCanvas from '../components/surface/RippleCanvas.tsx';
 import InkBleedOverlay from '../components/surface/InkBleedOverlay.tsx';
+import ThemeToggle from '../components/shared/ThemeToggle.astro';
 import '../styles/layer1.css';
 
 interface Props {
@@ -21,6 +22,8 @@ const { title, description } = Astro.props;
   <div id="inkbleed-overlay" aria-hidden="true">
     <InkBleedOverlay client:only="solid-js" />
   </div>
+
+  <ThemeToggle />
 
   <div class="surface">
     <slot />

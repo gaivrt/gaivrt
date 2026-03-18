@@ -42,8 +42,8 @@ const toc = [
 
 <style>
   .home-page {
-    height: 100dvh;
-    overflow: hidden;
+    min-height: 100dvh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -72,8 +72,8 @@ const toc = [
   }
 
   .hero-avatar {
-    width: 88px;
-    height: 88px;
+    width: clamp(64px, 12vw, 88px);
+    height: clamp(64px, 12vw, 88px);
     border-radius: 6px;
     object-fit: cover;
     border: 2px solid var(--surface-border);
@@ -134,7 +134,7 @@ const toc = [
 
   /* ── TOC ── */
   .toc {
-    width: clamp(260px, 55vw, 380px);
+    width: clamp(240px, 70vw, 400px);
     margin: 0 auto;
   }
 
@@ -185,6 +185,12 @@ const toc = [
 
   .toc-row:hover .toc-desc {
     color: var(--surface-text);
+  }
+
+  @media (max-width: 767px) {
+    .hero { padding-bottom: 1.5rem; }
+    .hero-avatar { margin-bottom: 1.5rem; }
+    .hero-bio { max-width: 85vw; }
   }
 
   @media (max-width: 480px) {

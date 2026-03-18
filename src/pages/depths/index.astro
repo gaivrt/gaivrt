@@ -103,6 +103,7 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
     if (!root) return;
 
     // --- Zone grid layout (3×3, skip zone 7 = bottom-center for core link) ---
+    var isMobile = window.innerWidth < 768;
     var zones = [
       { left: [5, 28],  top: [8, 28] },
       { left: [33, 62], top: [5, 25] },
@@ -121,6 +122,16 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
     for (var j = indices.length - 1; j > 0; j--) {
       var k = Math.floor(Math.random() * (j + 1));
       var tmp = indices[j]; indices[j] = indices[k]; indices[k] = tmp;
+    }
+
+    // Compress zones inward on mobile to prevent text clipping edges
+    if (isMobile) {
+      zones = zones.map(function(z) {
+        return {
+          left: [Math.max(5, z.left[0] + 3), Math.min(88, z.left[1] - 3)],
+          top: z.top
+        };
+      });
     }
 
     function rand(min, max) { return min + Math.random() * (max - min); }
@@ -178,5 +189,11 @@ import Layer2Layout from '../../layouts/Layer2Layout.astro';
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+
+  @media (max-width: 767px) {
+    .depths-hint {
+      padding-top: 25vh;
+    }
   }
 </style>

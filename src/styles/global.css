@@ -12,12 +12,15 @@
   --depths-text-dim: rgba(235, 220, 200, 0.3);
   --depths-text-bright: rgba(245, 235, 220, 0.95);
 
+  /* Semantic tokens */
+  --tag-bg: rgba(0, 0, 0, 0.06);
+
   /* Shared */
   --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-display: 'Cormorant Garamond', '华文中宋', 'STZhongsong', serif;
-  --font-body: '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
+  --font-display: 'Cormorant Garamond', 'Noto Serif SC', '华文中宋', 'STZhongsong', serif;
+  --font-body: 'Noto Serif SC', '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-serif: '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
+  --font-serif: 'Noto Serif SC', '华文中宋', 'STZhongsong', 'Cormorant Garamond', serif;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -30,6 +33,20 @@
   /* Layout */
   --content-width: 720px;
   --page-width: 1080px;
+
+  color-scheme: light;
+}
+
+/* Dark mode: candlelit study */
+[data-theme="dark"] {
+  --surface-bg: #1a1612;
+  --surface-text: #d8cfc2;
+  --surface-text-secondary: #9a8e7e;
+  --surface-border: #2e2822;
+  --surface-accent: #c4845c;
+  --tag-bg: rgba(200, 180, 150, 0.12);
+
+  color-scheme: dark;
 }
 
 *,
@@ -65,4 +82,23 @@ img, video, svg {
 
 ::selection {
   background: rgba(180, 160, 120, 0.25);
+}
+
+/* ── Responsive Overrides ── */
+@media (max-width: 767px) {
+  :root {
+    --space-lg: 1.25rem;
+    --space-xl: 2.5rem;
+    --space-2xl: 4rem;
+    --content-width: 100%;
+    --page-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --space-lg: 1rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+  }
 }

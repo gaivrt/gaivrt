@@ -49,6 +49,10 @@ if (items.length === 1) {
   .item-list li a { display: flex; align-items: baseline; gap: var(--space-md); }
   .item-title { font-size: 1.1rem; font-weight: 500; }
   .item-list li a:hover .item-title { text-decoration: underline; }
-  .status { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: rgba(0,0,0,0.06); color: var(--surface-text-secondary); }
+  .status { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: var(--tag-bg); color: var(--surface-text-secondary); }
   .item-desc { margin-top: var(--space-xs); font-size: 0.9rem; color: var(--surface-text-secondary); }
+
+  @media (max-width: 767px) {
+    .item-list li a { flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
+  }
 </style>
