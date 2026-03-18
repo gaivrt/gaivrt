@@ -62,12 +62,14 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   font-family: var(--font-body);
   line-height: 1.7;
   min-height: 100dvh;
+  background-color: var(--surface-bg);
 }
 
 a {
