@@ -59,7 +59,7 @@ export const INK_BLEED = {
   /** feTurbulence octaves */
   NOISE_OCTAVES: 5,
   /** Full reveal duration (ms) */
-  REVEAL_DURATION: 10_000,
+  REVEAL_DURATION: 30_000,
   /** Threshold update interval (ms) */
   REVEAL_INTERVAL: 250,
   /** Flood (click) expansion duration (ms) */
