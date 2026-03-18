@@ -21,12 +21,11 @@ const thoughts = (await getCollection('thoughts'))
         </li>
       ))}
     </ul>
-    <a href="/depths/" class="back-link">← 回到深处</a>
   </div>
 </Layer2Layout>
 
 <script is:inline>
-  (function() {
+  function initCore() {
     var visits = 0;
     try {
       var d = JSON.parse(localStorage.getItem('gaivrt_visits') || '{}');
@@ -38,18 +37,29 @@ const thoughts = (await getCollection('thoughts'))
       return;
     }
 
-    // 5s: reveal "你来了"
-    setTimeout(function() {
-      var msg = document.getElementById('core-msg');
-      if (msg) msg.classList.add('revealed');
-    }, 5000);
+    var coreSeen = false;
+    try { coreSeen = localStorage.getItem('gaivrt_core_seen') === '1'; } catch {}
 
-    // 8s: reveal thoughts list
-    setTimeout(function() {
+    if (!coreSeen) {
+      setTimeout(function() {
+        var msg = document.getElementById('core-msg');
+        if (msg) msg.classList.add('revealed');
+      }, 5000);
+      setTimeout(function() {
+        var list = document.getElementById('thoughts-list');
+        if (list) list.classList.add('revealed');
+      }, 8000);
+      try { localStorage.setItem('gaivrt_core_seen', '1'); } catch {}
+    } else {
+      var msg = document.getElementById('core-msg');
+      if (msg) msg.style.display = 'none';
       var list = document.getElementById('thoughts-list');
       if (list) list.classList.add('revealed');
-    }, 8000);
-  })();
+    }
+  }
+
+  initCore();
+  document.addEventListener('astro:page-load', initCore);
 </script>
 
 <style>
@@ -95,15 +105,4 @@ const thoughts = (await getCollection('thoughts'))
     color: var(--depths-text-bright);
   }
 
-  .back-link {
-    display: inline-block;
-    margin-top: var(--space-lg);
-    font-size: 0.8rem;
-    color: var(--depths-text-dim);
-    transition: color var(--transition-smooth);
-  }
-
-  .back-link:hover {
-    color: var(--depths-text-bright);
-  }
 </style>
