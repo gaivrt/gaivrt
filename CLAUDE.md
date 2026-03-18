@@ -40,6 +40,16 @@ Subpages: minimal `← GAIVRT` back-link via `BackLink.astro` (no sticky nav).
 ### Layer 2 — Depths (`pages/depths/`)
 Deep warm black (#0a0806) with floating text fragments. Content progressively unlocks based on visit count (thresholds in `src/lib/constants.ts`). Core page (`depths/core.astro`) is the final endpoint.
 
+### Progressive Unlock System
+
+Visit count (localStorage via `visitStore.ts`) drives content revelation. Thresholds in `constants.ts`:
+- **3 visits**: extra text fragments appear on `/depths/`; entrance may reappear (25% chance)
+- **5 visits**: all thoughts collection content unlocked
+- **8 visits**: core link begins flickering on `/depths/`
+- **10 visits**: full access to `/depths/core` (redirects otherwise)
+
+InkBleed idle delay also scales with visits: >10 → 15s, >5 → 18s, default → 30s.
+
 ### Key architectural boundaries
 - **Layouts**: `BaseLayout` → `Layer1Layout` (warm paper) or `Layer2Layout` (deep warm black)
 - **Client islands**: Solid.js components use `client:only="solid-js"` (no SSR)
@@ -57,6 +67,14 @@ Canvas overlays with `position:fixed; pointer-events:none; z-index:10; mix-blend
 
 Performance monitor (`performanceMonitor.ts`) degrades gracefully: FPS < 30 → half resolution, FPS < 15 → CSS radial-gradient fallback.
 
+## Ink Bleed System (`src/lib/inkbleed/`)
+
+SVG feTurbulence-based transition effect on Layer 1 (no WebGL dependency):
+- `InkBleedEngine.ts` — builds an SVG filter chain (`feTurbulence → feColorMatrix → feFlood → feComposite`), animates threshold via `feFuncA.tableValues`
+- Component: `InkBleedOverlay.tsx` (Solid.js island, z-index: 20, above ripple)
+- Behavior: idle 30s → stains appear (10s reveal) → user moves → stains vanish → idle again. Click while stains visible → flood transition (700ms) → navigate to `/depths/`
+- Overlays at `position:fixed; z-index:20` covering the ripple layer
+
 ## Particle System (`src/lib/particles/`)
 
 Canvas 2D particle text engine for the entrance page:
@@ -71,6 +89,8 @@ Canvas 2D particle text engine for the entrance page:
 - Custom remark plugins in `src/plugins/`: wikilinks (`[[link]]`), callouts (`> [!type]`), mark highlights, video embeds
 - Rehype plugins: slug, autolink headings, KaTeX math
 - `src/content/config.ts` defines Zod schemas for `blog` and `thoughts` collections
+- `r2-loader.ts` is a custom Astro Content Loader: checks R2 env vars → S3 or local fallback, cleans Obsidian/Typora markdown artifacts (zero-width spaces, non-breaking spaces, single-$ math normalization), supports `HTTPS_PROXY`
+- `thoughts` collection has `unlockAt` field (default 3) — content gated by visit count
 
 ## Environment Variables
 
@@ -82,8 +102,18 @@ Defined in `.env` (see `.env.example`):
 ## Conventions
 
 - Package manager: **yarn** (not npm)
-- Styling: CSS variables defined in `src/styles/global.css` (warm surface vs warm-dark depths color systems)
-- Fonts: Cormorant Garamond (display), 华文中宋/STZhongsong (body/serif), JetBrains Mono (code)
 - All timing/threshold constants centralized in `src/lib/constants.ts`
 - Solid.js components are `.tsx`, Astro components are `.astro`
 - Rendering engine classes follow `constructor → start → stop → dispose` lifecycle pattern
+- Lightweight Astro components (`VisitTracker.astro`, `ObserverText.astro`) use inline `<script>` — no framework overhead
+- Fonts: Cormorant Garamond (display), 华文中宋/STZhongsong (body/serif), JetBrains Mono (code)
+
+## CSS Architecture (`src/styles/`)
+
+Four CSS files, no preprocessor:
+- `global.css` — CSS variables (color tokens for both layers, spacing scale `--space-xs` to `--space-2xl`, font stacks), reset, base elements
+- `layer1.css` — Surface warm paper theme, ripple canvas container styling
+- `layer2.css` — Depths dark theme, floating fragment drift animations, core link flicker, prose overrides for dark background
+- `typography.css` — Prose content styling: headings, code blocks, callout variants (note/tip/warning/important/quote), KaTeX, video embeds
+
+Z-index stacking on Layer 1: content (default) → ripple canvas (10, `soft-light`) → ink bleed overlay (20)
