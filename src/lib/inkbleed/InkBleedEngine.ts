@@ -256,8 +256,8 @@ export class InkBleedEngine {
     this.funcA = funcA;
 
     const composite = document.createElementNS(SVG_NS, 'feComposite');
-    composite.setAttribute('in', 'threshold');
-    composite.setAttribute('in2', 'SourceGraphic');
+    composite.setAttribute('in', 'SourceGraphic');
+    composite.setAttribute('in2', 'threshold');
     composite.setAttribute('operator', 'in');
     composite.setAttribute('result', 'masked');
     filter.appendChild(composite);

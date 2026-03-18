@@ -22,14 +22,18 @@ const { title, description = 'GAIVRT — researcher, builder, explorer.' } = Ast
       (function(){
         var s='gaivrt_theme',p;
         try{p=localStorage.getItem(s)}catch(e){}
-        var t=(p==='light'||p==='dark')?p:
+        var pref=(p==='light'||p==='dark'||p==='system')?p:'system';
+        var t=(pref==='light'||pref==='dark')?pref:
           (window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
-        document.documentElement.setAttribute('data-theme',t);
+        var d=document.documentElement;
+        d.setAttribute('data-theme',t);
+        d.setAttribute('data-theme-pref',pref);
 
         // Preserve theme across Astro view transitions
         document.addEventListener('astro:before-swap',function(e){
-          var theme=document.documentElement.getAttribute('data-theme');
-          if(theme) e.newDocument.documentElement.setAttribute('data-theme',theme);
+          var nd=e.newDocument.documentElement;
+          nd.setAttribute('data-theme',d.getAttribute('data-theme'));
+          nd.setAttribute('data-theme-pref',d.getAttribute('data-theme-pref'));
         });
       })();
     </script>
