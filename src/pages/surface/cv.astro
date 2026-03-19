@@ -2,12 +2,15 @@
 import { getCollection, render } from 'astro:content';
 import Layer1Layout from '../../layouts/Layer1Layout.astro';
 import BackLink from '../../components/surface/BackLink.astro';
+import TableOfContents from '../../components/surface/TableOfContents.astro';
 
 const items = await getCollection('cv');
 let InlineContent: any = null;
+let headings: { depth: number; slug: string; text: string }[] = [];
 if (items.length > 0) {
   const result = await render(items[0]);
   InlineContent = result.Content;
+  headings = result.headings;
 }
 ---
 
@@ -15,11 +18,17 @@ if (items.length > 0) {
   <div class="surface-container">
     <BackLink />
     <main>
-      <h1>CV</h1>
       {InlineContent ? (
-        <article class="prose">
-          <InlineContent />
-        </article>
+        <div class="article-layout">
+          <article class="prose">
+            <h1>CV</h1>
+            <TableOfContents headings={headings} variant="inline" />
+            <InlineContent />
+          </article>
+          <aside class="toc-aside">
+            <TableOfContents headings={headings} variant="sidebar" />
+          </aside>
+        </div>
       ) : (
         <p class="empty">暂无内容。</p>
       )}
@@ -28,6 +37,27 @@ if (items.length > 0) {
 </Layer1Layout>
 
 <style>
+  .article-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xl);
+  }
+
+  .toc-aside {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .article-layout {
+      grid-template-columns: minmax(0, var(--content-width)) 220px;
+      max-width: calc(var(--content-width) + 220px + var(--space-xl));
+    }
+
+    .toc-aside {
+      display: block;
+    }
+  }
+
   h1 { margin: 0 0 var(--space-lg); }
   .empty { color: var(--surface-text-secondary); font-style: italic; }
 </style>

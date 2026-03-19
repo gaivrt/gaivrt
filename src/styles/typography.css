@@ -178,10 +178,19 @@ p + p { margin-top: var(--space-md); }
 }
 
 /* --- Heading anchor links --- */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  position: relative;
+}
+
 .heading-anchor {
+  position: absolute;
+  right: 100%;
+  padding-right: 0.3em;
   opacity: 0;
   text-decoration: none;
-  margin-right: 0.3em;
   font-size: 0.85em;
   color: var(--surface-text-secondary);
   transition: opacity var(--transition-smooth);
