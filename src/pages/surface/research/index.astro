@@ -3,11 +3,9 @@ import { getCollection, render } from 'astro:content';
 import Layer1Layout from '../../../layouts/Layer1Layout.astro';
 import BackLink from '../../../components/surface/BackLink.astro';
 
-const items = (await getCollection('research'))
-  .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
-
+const items = await getCollection('research');
 let InlineContent: any = null;
-if (items.length === 1) {
+if (items.length > 0) {
   const result = await render(items[0]);
   InlineContent = result.Content;
 }
@@ -18,41 +16,19 @@ if (items.length === 1) {
     <BackLink />
     <main>
       <h1>Research</h1>
-      {items.length === 0 ? (
-        <p class="empty">暂无内容。</p>
-      ) : items.length === 1 ? (
+      {InlineContent ? (
         <article class="prose">
           <InlineContent />
         </article>
       ) : (
-        <ul class="item-list">
-          {items.map((item) => (
-            <li>
-              <a href={`/surface/research/${item.id}`}>
-                <span class="item-title">{item.data.title}</span>
-                {item.data.status && <span class="status">{item.data.status}</span>}
-              </a>
-              {item.data.description && <p class="item-desc">{item.data.description}</p>}
-            </li>
-          ))}
-        </ul>
+        <p class="empty">暂无内容。</p>
       )}
     </main>
   </div>
 </Layer1Layout>
 
 <style>
+  main { max-width: var(--content-width); margin: 0 auto; }
   h1 { margin: 0 0 var(--space-lg); }
   .empty { color: var(--surface-text-secondary); font-style: italic; }
-  .item-list { list-style: none; padding: 0; }
-  .item-list li { padding: var(--space-md) 0; border-bottom: 1px solid var(--surface-border); }
-  .item-list li a { display: flex; align-items: baseline; gap: var(--space-md); }
-  .item-title { font-size: 1.1rem; font-weight: 500; }
-  .item-list li a:hover .item-title { text-decoration: underline; }
-  .status { font-size: 0.75rem; padding: 0.15em 0.5em; border-radius: 3px; background: var(--tag-bg); color: var(--surface-text-secondary); }
-  .item-desc { margin-top: var(--space-xs); font-size: 0.9rem; color: var(--surface-text-secondary); }
-
-  @media (max-width: 767px) {
-    .item-list li a { flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
-  }
 </style>

@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import Layer1Layout from '../../../layouts/Layer1Layout.astro';
 import BackLink from '../../../components/surface/BackLink.astro';
+import TableOfContents from '../../../components/surface/TableOfContents.astro';
 
 export async function getStaticPaths() {
   const items = await getCollection('publications');
@@ -9,31 +10,58 @@ export async function getStaticPaths() {
 }
 
 const { item } = Astro.props;
-const { Content } = await render(item);
+const { Content, headings } = await render(item);
 ---
 
 <Layer1Layout title={`${item.data.title} — GAIVRT`}>
   <div class="surface-container">
     <BackLink />
     <main>
-      <article class="prose">
-        <header>
-          <h1>{item.data.title}</h1>
-          <div class="meta">
-            {item.data.authors && <span>{item.data.authors}</span>}
-            {item.data.venue && <span class="venue">{item.data.venue}</span>}
-            {item.data.date && <time datetime={item.data.date.toISOString()}>{item.data.date.getFullYear()}</time>}
-            {item.data.url && <a href={item.data.url} class="link">Paper</a>}
-          </div>
-        </header>
-        <Content />
-      </article>
+      <div class="article-layout">
+        <article class="prose">
+          <header>
+            <h1>{item.data.title}</h1>
+            <div class="meta">
+              {item.data.authors && <span>{item.data.authors}</span>}
+              {item.data.venue && <span class="venue">{item.data.venue}</span>}
+              {item.data.date && <time datetime={item.data.date.toISOString()}>{item.data.date.getFullYear()}</time>}
+              {item.data.url && <a href={item.data.url} class="link">Paper</a>}
+            </div>
+          </header>
+          <TableOfContents headings={headings} variant="inline" />
+          <Content />
+        </article>
+        <aside class="toc-aside">
+          <TableOfContents headings={headings} variant="sidebar" />
+        </aside>
+      </div>
       <a href="/surface/publications" class="back-link">← 返回 Publications</a>
     </main>
   </div>
 </Layer1Layout>
 
 <style>
+  .article-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-xl);
+  }
+
+  .toc-aside {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .article-layout {
+      grid-template-columns: minmax(0, var(--content-width)) 220px;
+      max-width: calc(var(--content-width) + 220px + var(--space-xl));
+    }
+
+    .toc-aside {
+      display: block;
+    }
+  }
+
   header { margin-bottom: var(--space-xl); }
   header h1 { margin-bottom: var(--space-sm); }
   .meta { display: flex; align-items: center; gap: var(--space-md); font-size: 0.85rem; color: var(--surface-text-secondary); flex-wrap: wrap; }
