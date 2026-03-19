@@ -5,9 +5,12 @@ const blog = defineCollection({
   loader: r2Loader({ prefix: 'gaivrt/Blog/' }),
   schema: z.object({
     title: z.string(),
-    date: z.coerce.date(),
+    date: z.coerce.date().optional(),
     description: z.string().optional(),
-    tags: z.array(z.string()).default([]),
+    tags: z.preprocess(
+      (v) => (Array.isArray(v) ? v : v == null ? [] : [String(v)]),
+      z.array(z.string()),
+    ).default([]),
     draft: z.boolean().default(false),
   }),
 });

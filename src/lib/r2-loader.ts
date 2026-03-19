@@ -1,11 +1,12 @@
 import type { Loader } from 'astro/loaders';
 import {
   S3Client,
-  ListObjectsV2Command,
   GetObjectCommand,
+  paginateListObjectsV2,
 } from '@aws-sdk/client-s3';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import pLimit from 'p-limit';
 import matter from 'gray-matter';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -47,10 +48,11 @@ function createS3Client(env: R2Env): S3Client {
       accessKeyId: env.accessKeyId,
       secretAccessKey: env.secretAccessKey,
     },
-    ...(proxy && {
-      requestHandler: new NodeHttpHandler({
-        httpsAgent: new HttpsProxyAgent(proxy),
-      }),
+    maxAttempts: 3,
+    requestHandler: new NodeHttpHandler({
+      connectionTimeout: 5_000,
+      requestTimeout: 30_000,
+      ...(proxy && { httpsAgent: new HttpsProxyAgent(proxy) }),
     }),
   });
 }
@@ -60,20 +62,29 @@ async function fetchFromR2(
   env: R2Env,
 ): Promise<RawFile[]> {
   const client = createS3Client(env);
-  const list = await client.send(
-    new ListObjectsV2Command({ Bucket: env.bucket, Prefix: prefix }),
-  );
+  const limit = pLimit(10);
 
-  const files: RawFile[] = [];
-  for (const obj of list.Contents ?? []) {
-    if (!obj.Key || !isValidMd(obj.Key)) continue;
-    const res = await client.send(
-      new GetObjectCommand({ Bucket: env.bucket, Key: obj.Key }),
-    );
-    const raw = await res.Body!.transformToString('utf-8');
-    files.push({ name: obj.Key.slice(prefix.length), raw });
+  const keys: string[] = [];
+  for await (const page of paginateListObjectsV2(
+    { client },
+    { Bucket: env.bucket, Prefix: prefix },
+  )) {
+    for (const obj of page.Contents ?? []) {
+      if (obj.Key && isValidMd(obj.Key)) keys.push(obj.Key);
+    }
   }
-  return files;
+
+  return Promise.all(
+    keys.map((key) =>
+      limit(async () => {
+        const res = await client.send(
+          new GetObjectCommand({ Bucket: env.bucket, Key: key }),
+        );
+        const raw = await res.Body!.transformToString('utf-8');
+        return { name: key.slice(prefix.length), raw };
+      }),
+    ),
+  );
 }
 
 // ── Local fallback ───────────────────────────────────
@@ -114,11 +125,14 @@ function normalizeFrontmatter(
   body: string,
   filename: string,
 ): Record<string, unknown> {
-  return {
+  const result: Record<string, unknown> = {
     ...fm,
     title: fm.title || extractTitle(body, filename),
-    ...(fm.date !== undefined && { date: cleanDate(fm.date) ?? fm.date }),
   };
+  if (fm.date !== undefined) {
+    result.date = cleanDate(fm.date); // undefined if unparseable
+  }
+  return result;
 }
 
 // ── Content normalization ────────────────────────────
@@ -173,17 +187,36 @@ export function r2Loader({ prefix }: R2LoaderOptions): Loader {
         `[${collection}] ${hasR2 ? 'R2' : '本地'}：${files.length} 个文件`,
       );
 
-      store.clear();
+      const untouched = new Set(store.keys());
+      const failed: string[] = [];
 
       for (const file of files) {
-        const { data: rawFm, content: rawBody } = matter(file.raw);
-        const body = normalizeMarkdown(rawBody);
         const id = toId(file.name);
-        const frontmatter = normalizeFrontmatter(rawFm, body, file.name);
-        const digest = generateDigest(file.raw);
-        const data = await parseData({ id, data: frontmatter });
-        const rendered = await renderMarkdown(body);
-        store.set({ id, data, body, rendered, digest });
+        untouched.delete(id);
+
+        try {
+          const digest = generateDigest(file.raw);
+          if (store.has(id) && store.get(id)?.digest === digest) continue;
+
+          const { data: rawFm, content: rawBody } = matter(file.raw);
+          const body = normalizeMarkdown(rawBody);
+          const frontmatter = normalizeFrontmatter(rawFm, body, file.name);
+          const data = await parseData({ id, data: frontmatter });
+          const rendered = await renderMarkdown(body);
+          store.set({ id, data, body, rendered, digest });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          logger.warn(`[${collection}] 跳过 ${file.name}: ${msg}`);
+          failed.push(file.name);
+        }
+      }
+
+      for (const staleId of untouched) store.delete(staleId);
+
+      if (failed.length > 0) {
+        logger.warn(
+          `[${collection}] ${failed.length} 个文件失败: ${failed.join(', ')}`,
+        );
       }
     },
   };
