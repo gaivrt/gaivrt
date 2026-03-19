@@ -1,13 +1,14 @@
 ---
-/**
- * Minimal back-to-home link for subpages.
- * Replaces the heavy sticky NavBar on content pages.
- */
+interface Props {
+  href?: string;
+  label?: string;
+}
+const { href = '/surface/', label = 'GAIVRT' } = Astro.props;
 ---
 
-<a href="/surface/" class="back-link" aria-label="Back to home">
+<a href={href} class="back-link" aria-label={`Back to ${label}`}>
   <span class="back-arrow">←</span>
-  <span class="back-name">GAIVRT</span>
+  <span class="back-name">{label}</span>
 </a>
 
 <style>

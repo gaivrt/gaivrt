@@ -5,7 +5,7 @@ import BackLink from '../../../components/surface/BackLink.astro';
 import TableOfContents from '../../../components/surface/TableOfContents.astro';
 
 export async function getStaticPaths() {
-  const items = await getCollection('projects');
+  const items = await getCollection('publications');
   return items.map((item) => ({ params: { slug: item.id }, props: { item } }));
 }
 
@@ -15,16 +15,17 @@ const { Content, headings } = await render(item);
 
 <Layer1Layout title={`${item.data.title} — GAIVRT`}>
   <div class="surface-container">
-    <BackLink />
+    <BackLink href="/surface/publications/" label="Publications" />
     <main>
       <div class="article-layout">
         <article class="prose">
           <header>
             <h1>{item.data.title}</h1>
             <div class="meta">
-              {item.data.date && <time datetime={item.data.date.toISOString()}>{item.data.date.toLocaleDateString('zh-CN')}</time>}
-              {item.data.github && <a href={item.data.github} class="link">GitHub</a>}
-              {item.data.url && <a href={item.data.url} class="link">Live</a>}
+              {item.data.authors && <span>{item.data.authors}</span>}
+              {item.data.venue && <span class="venue">{item.data.venue}</span>}
+              {item.data.date && <time datetime={item.data.date.toISOString()}>{item.data.date.getFullYear()}</time>}
+              {item.data.url && <a href={item.data.url} class="link">Paper</a>}
             </div>
           </header>
           <TableOfContents headings={headings} variant="inline" />
@@ -34,7 +35,6 @@ const { Content, headings } = await render(item);
           <TableOfContents headings={headings} variant="sidebar" />
         </aside>
       </div>
-      <a href="/surface/projects" class="back-link">← 返回 Projects</a>
     </main>
   </div>
 </Layer1Layout>
@@ -63,8 +63,7 @@ const { Content, headings } = await render(item);
 
   header { margin-bottom: var(--space-xl); }
   header h1 { margin-bottom: var(--space-sm); }
-  .meta { display: flex; align-items: center; gap: var(--space-md); font-size: 0.85rem; color: var(--surface-text-secondary); }
+  .meta { display: flex; align-items: center; gap: var(--space-md); font-size: 0.85rem; color: var(--surface-text-secondary); flex-wrap: wrap; }
+  .venue { font-style: italic; }
   .link { text-decoration: underline; }
-  .back-link { display: inline-block; margin-top: var(--space-xl); font-size: 0.85rem; color: var(--surface-text-secondary); transition: color var(--transition-smooth); }
-  .back-link:hover { color: var(--surface-text); }
 </style>

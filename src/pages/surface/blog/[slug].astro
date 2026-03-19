@@ -18,16 +18,18 @@ const { Content, headings } = await render(post);
 
 <Layer1Layout title={`${post.data.title} — GAIVRT`}>
   <div class="surface-container">
-    <BackLink />
+    <BackLink href="/surface/blog/" label="Blog" />
     <main>
       <div class="article-layout">
         <article class="prose">
           <header class="post-header">
             <h1>{post.data.title}</h1>
             <div class="post-meta">
-              <time datetime={post.data.date.toISOString()}>
-                {post.data.date.toLocaleDateString('zh-CN')}
-              </time>
+              {post.data.date && (
+                <time datetime={post.data.date.toISOString()}>
+                  {post.data.date.toLocaleDateString('zh-CN')}
+                </time>
+              )}
               {post.data.tags.length > 0 && (
                 <div class="post-tags">
                   {post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
@@ -42,7 +44,6 @@ const { Content, headings } = await render(post);
           <TableOfContents headings={headings} variant="sidebar" />
         </aside>
       </div>
-      <a href="/surface/blog" class="back-link">← 返回 Blog</a>
     </main>
   </div>
 </Layer1Layout>
@@ -102,15 +103,4 @@ const { Content, headings } = await render(post);
     background: var(--tag-bg);
   }
 
-  .back-link {
-    display: inline-block;
-    margin-top: var(--space-xl);
-    font-size: 0.85rem;
-    color: var(--surface-text-secondary);
-    transition: color var(--transition-smooth);
-  }
-
-  .back-link:hover {
-    color: var(--surface-text);
-  }
 </style>

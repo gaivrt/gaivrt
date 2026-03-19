@@ -1,14 +1,21 @@
 ---
 import { getCollection, render } from 'astro:content';
+import type { GetStaticPathsOptions } from 'astro';
 import Layer1Layout from '../../../layouts/Layer1Layout.astro';
 import BackLink from '../../../components/surface/BackLink.astro';
+import Pagination from '../../../components/surface/Pagination.astro';
 
-const items = (await getCollection('publications'))
-  .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const items = (await getCollection('publications'))
+    .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
+  return paginate(items, { pageSize: 20 });
+}
+
+const { page } = Astro.props;
 
 let InlineContent: any = null;
-if (items.length === 1) {
-  const result = await render(items[0]);
+if (page.total === 1) {
+  const result = await render(page.data[0]);
   InlineContent = result.Content;
 }
 ---
@@ -18,16 +25,16 @@ if (items.length === 1) {
     <BackLink />
     <main>
       <h1>Publications</h1>
-      {items.length === 0 ? (
+      {page.total === 0 ? (
         <p class="empty">暂无内容。</p>
-      ) : items.length === 1 ? (
+      ) : page.total === 1 ? (
         <article class="prose">
           <InlineContent />
         </article>
       ) : (
         <ul class="item-list">
-          {items.map((item) => (
-            <li>
+          {page.data.map((item, i) => (
+            <li style={`--i: ${i}`}>
               <a href={`/surface/publications/${item.id}`}>
                 <span class="item-title">{item.data.title}</span>
               </a>
@@ -40,6 +47,7 @@ if (items.length === 1) {
           ))}
         </ul>
       )}
+      <Pagination page={page} base="/surface/publications" />
     </main>
   </div>
 </Layer1Layout>
@@ -48,11 +56,22 @@ if (items.length === 1) {
   h1 { margin: 0 0 var(--space-lg); }
   .empty { color: var(--surface-text-secondary); font-style: italic; }
   .item-list { list-style: none; padding: 0; }
-  .item-list li { padding: var(--space-md) 0; border-bottom: 1px solid var(--surface-border); }
+  .item-list li {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--surface-border);
+    opacity: 0;
+    animation: rowReveal 0.4s ease forwards;
+    animation-delay: calc(0.1s + var(--i) * 0.05s);
+  }
   .item-title { font-size: 1.05rem; font-weight: 500; }
   .item-list li a:hover .item-title { text-decoration: underline; }
   .pub-meta { margin-top: var(--space-xs); font-size: 0.85rem; color: var(--surface-text-secondary); display: flex; gap: var(--space-sm); flex-wrap: wrap; }
   .venue { font-style: italic; }
+
+  @keyframes rowReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   @media (max-width: 767px) {
     .pub-meta { flex-direction: column; gap: var(--space-xs); }

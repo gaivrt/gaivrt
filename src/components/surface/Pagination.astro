@@ -1,0 +1,99 @@
+---
+interface Props {
+  page: {
+    currentPage: number;
+    lastPage: number;
+    url: { prev: string | undefined; next: string | undefined };
+  };
+  base: string;
+}
+
+const { page, base } = Astro.props;
+const { currentPage, lastPage } = page;
+
+function getPages(cur: number, last: number): (number | '...')[] {
+  if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1);
+  const p: (number | '...')[] = [1];
+  if (cur > 3) p.push('...');
+  for (let i = Math.max(2, cur - 1); i <= Math.min(last - 1, cur + 1); i++) p.push(i);
+  if (cur < last - 2) p.push('...');
+  p.push(last);
+  return p;
+}
+
+const pages = getPages(currentPage, lastPage);
+const pageUrl = (n: number) => (n === 1 ? `${base}/` : `${base}/${n}/`);
+---
+
+{lastPage > 1 && (
+  <nav class="pagination" aria-label="Pagination">
+    {page.url.prev ? (
+      <a href={page.url.prev} class="page-link prev" aria-label="Previous page">←</a>
+    ) : (
+      <span class="page-link prev disabled" aria-hidden="true">←</span>
+    )}
+
+    {pages.map((p) =>
+      p === '...' ? (
+        <span class="ellipsis">…</span>
+      ) : p === currentPage ? (
+        <span class="page-link current" aria-current="page">{p}</span>
+      ) : (
+        <a href={pageUrl(p)} class="page-link">{p}</a>
+      )
+    )}
+
+    {page.url.next ? (
+      <a href={page.url.next} class="page-link next" aria-label="Next page">→</a>
+    ) : (
+      <span class="page-link next disabled" aria-hidden="true">→</span>
+    )}
+  </nav>
+)}
+
+<style>
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-xl);
+    padding: var(--space-md) 0;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+  }
+
+  .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2em;
+    height: 2em;
+    padding: 0 0.5em;
+    border-radius: 4px;
+    color: var(--surface-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-smooth), background var(--transition-smooth);
+  }
+
+  .page-link:hover:not(.disabled):not(.current) {
+    color: var(--surface-accent);
+    background: rgba(139, 94, 60, 0.08);
+  }
+
+  .page-link.current {
+    color: var(--surface-text);
+    font-weight: 600;
+    background: rgba(139, 94, 60, 0.1);
+  }
+
+  .page-link.disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .ellipsis {
+    color: var(--surface-text-secondary);
+    padding: 0 0.25em;
+  }
+</style>
