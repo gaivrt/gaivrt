@@ -12,7 +12,7 @@ if (items.length > 0) {
 ---
 
 <Layer1Layout title="About — GAIVRT">
-  <div class="surface-container">
+  <div class="about-wrapper">
     <BackLink />
     <main>
       <h1>About</h1>
@@ -28,7 +28,26 @@ if (items.length > 0) {
 </Layer1Layout>
 
 <style>
-  main { max-width: var(--content-width); margin: 0 auto; }
+  .about-wrapper {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 10vh;
+  }
+
   h1 { margin: 0 0 var(--space-lg); }
   .empty { color: var(--surface-text-secondary); font-style: italic; }
 </style>
