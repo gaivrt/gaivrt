@@ -52,6 +52,7 @@ export interface ParticleTextConfig {
   springForce: number;
   damping: number;
   repulsion: number;
+  repulsionFloor: number;
   noiseScale: number;
   noiseDrift: number;
   cycleFrames: number;

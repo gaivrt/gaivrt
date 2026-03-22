@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: ParticleTextConfig = {
   springForce: ENTRANCE.SPRING_FORCE,
   damping: ENTRANCE.DAMPING,
   repulsion: ENTRANCE.REPULSION,
+  repulsionFloor: ENTRANCE.REPULSION_FLOOR,
   noiseScale: ENTRANCE.NOISE_SCALE,
   noiseDrift: ENTRANCE.NOISE_DRIFT,
   cycleFrames: ENTRANCE.CYCLE_FRAMES,
@@ -179,7 +180,8 @@ export class ParticleText {
       const dy = p.y - mouse.y;
       const d2 = dx * dx + dy * dy;
       if (d2 < mr2 && d2 > 1) {
-        const f = config.repulsion / d2;
+        const floor2 = config.repulsionFloor * config.repulsionFloor;
+        const f = config.repulsion / Math.max(d2, floor2);
         const d = Math.sqrt(d2);
         fx += (dx / d) * f;
         fy += (dy / d) * f;

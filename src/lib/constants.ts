@@ -43,6 +43,8 @@ export const ENTRANCE = {
   DAMPING: 0.87,
   MOUSE_RADIUS: 80,
   REPULSION: 1500,
+  /** Min distance (px) for repulsion — prevents force spike at very close range */
+  REPULSION_FLOOR: 20,
   /** Noise */
   NOISE_SCALE: 0.012,
   NOISE_DRIFT: 0.0004,
