@@ -1,0 +1,20 @@
+{
+  "name": "r2-rebuild-trigger",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-18",
+  "workers_dev": false,
+  "observability": {
+    "enabled": true
+  },
+  "queues": {
+    "consumers": [
+      {
+        "queue": "r2-rebuild-queue",
+        "max_batch_size": 100,
+        "max_batch_timeout": 60,
+        "max_retries": 3,
+        "max_concurrency": 1
+      }
+    ]
+  }
+}
