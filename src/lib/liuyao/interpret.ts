@@ -3,6 +3,7 @@ import { buildInterpretationPayload, stripMd } from './prompt';
 const DEFAULT_API_BASE = 'https://liuyao.gaivrt.online';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const TEST_SITE_KEY = '1x00000000000000000000AA';
+const PRODUCTION_SITE_KEY = '0x4AAAAAAD5K63nb7W6yEBGD';
 const TURNSTILE_LOAD_TIMEOUT_MS = 15_000;
 const TURNSTILE_CHALLENGE_TIMEOUT_MS = 25_000;
 
@@ -119,7 +120,7 @@ async function getTurnstileToken(): Promise<string> {
   await loadTurnstile();
   const turnstile = window.turnstile;
   if (!turnstile) throw new LiuyaoInterpretError('TURNSTILE_LOAD', '无法启动人机验证。');
-  const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? TEST_SITE_KEY : '');
+  const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || (import.meta.env.DEV ? TEST_SITE_KEY : PRODUCTION_SITE_KEY);
   if (!sitekey) throw new LiuyaoInterpretError('CONFIG', '网站尚未配置人机验证。');
 
   const mount = document.createElement('div');
