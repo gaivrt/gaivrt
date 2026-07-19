@@ -102,14 +102,14 @@ test('Production Web sessions use a secure HttpOnly host cookie', () => {
 });
 
 test('CORS credentials are returned only to the allowed site', async () => {
-  const allowed = await worker.fetch(new Request('https://liuyao.gaivrt.online/quota', {
+  const allowed = await worker.fetch(new Request('https://liuyao.gaivrt.com/quota', {
     method: 'OPTIONS',
     headers: { Origin: 'https://gaivrt.com', 'Access-Control-Request-Method': 'GET' },
   }), env(), {} as any);
   assert.equal(allowed.headers.get('Access-Control-Allow-Origin'), 'https://gaivrt.com');
   assert.equal(allowed.headers.get('Access-Control-Allow-Credentials'), 'true');
 
-  const denied = await worker.fetch(new Request('https://liuyao.gaivrt.online/quota', {
+  const denied = await worker.fetch(new Request('https://liuyao.gaivrt.com/quota', {
     method: 'OPTIONS',
     headers: { Origin: 'https://attacker.example', 'Access-Control-Request-Method': 'GET' },
   }), env(), {} as any);

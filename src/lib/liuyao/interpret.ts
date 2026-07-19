@@ -1,6 +1,6 @@
 import { buildInterpretationPayload, stripMd } from './prompt';
 
-const DEFAULT_API_BASE = 'https://liuyao.gaivrt.online';
+const DEFAULT_API_BASE = 'https://liuyao.gaivrt.com';
 const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const TEST_SITE_KEY = '1x00000000000000000000AA';
 const PRODUCTION_SITE_KEY = '0x4AAAAAAD5K63nb7W6yEBGD';
@@ -150,6 +150,8 @@ async function getTurnstileToken(): Promise<string> {
     try {
       widgetId = turnstile.render(mount, {
         sitekey,
+        appearance: 'interaction-only',
+        theme: 'auto',
         callback: (token: string) => finish(token),
         'error-callback': (code: string) => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', `人机验证失败（${code}），请重试。`)),
         'expired-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证已过期，请重试。')),

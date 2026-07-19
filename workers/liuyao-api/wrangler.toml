@@ -34,6 +34,7 @@ database_id = "REPLACE_AFTER_D1_CREATE_DEV"
 [env.production]
 name = "liuyao-worker-prod"
 routes = [
+  { pattern = "liuyao.gaivrt.com", custom_domain = true },
   { pattern = "liuyao.gaivrt.online/*", zone_name = "gaivrt.online" }
 ]
 

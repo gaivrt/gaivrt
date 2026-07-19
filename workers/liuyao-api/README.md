@@ -15,7 +15,7 @@ Apply both migrations to a local D1 database before running `yarn dev`.
 ## Required production configuration
 
 1. Replace the production D1 placeholder in `wrangler.toml` with the existing `liuyao-prod` database ID.
-2. Create a Cloudflare Turnstile widget for `gaivrt.online` in invisible mode.
+2. Create a Cloudflare Turnstile widget for `gaivrt.com` in managed mode.
 3. Add these Worker secrets with `wrangler secret put --env production`:
    - `WX_APPSECRET`
    - `DEEPSEEK_API_KEY`

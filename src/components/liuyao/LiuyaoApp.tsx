@@ -73,7 +73,6 @@ export default function LiuyaoApp() {
   const [motionReady, setMotionReady] = createSignal(false);
   let lock = false;
   let lastMotion = 0;
-  let castViewElement: HTMLElement | undefined;
   let resultViewElement: HTMLElement | undefined;
   let resultShellElement: HTMLDivElement | undefined;
   let fitFrame = 0;
@@ -99,7 +98,6 @@ export default function LiuyaoApp() {
         );
         element.style.setProperty('--mobile-fit', String(Math.max(0.1, scale)));
       };
-      fit(castViewElement);
       fit(resultShellElement, resultViewElement);
     });
   };
@@ -167,17 +165,25 @@ export default function LiuyaoApp() {
     const now = Date.now();
     if (magnitude > 18 && now - lastMotion > 1500) {
       lastMotion = now;
-      void shake();
+      shake();
     }
   };
 
-  const shake = async () => {
-    await enableMotion();
+  const vibrate = (pattern: number | number[]) => {
+    try {
+      return navigator.vibrate?.(pattern) ?? false;
+    } catch {
+      return false;
+    }
+  };
+
+  const shake = () => {
     if (lock || yaos().length >= 6) return;
     lock = true;
+    vibrate(40);
+    void enableMotion();
     setCoins(rollCoins());
     setShaking(true);
-    navigator.vibrate?.(35);
 
     let frames = 0;
     const timer = window.setInterval(() => {
@@ -193,7 +199,7 @@ export default function LiuyaoApp() {
       setYaos(next);
       setShaking(false);
       lock = false;
-      navigator.vibrate?.(next.length === 6 ? [60, 40, 80] : 20);
+      vibrate(next.length === 6 ? [60, 40, 80] : 20);
       if (next.length === 6) setResult(compile(next, new Date()));
     }, 65);
   };
@@ -411,7 +417,7 @@ export default function LiuyaoApp() {
           </Show>
         </main>
       }>
-        <main class="cast-view" ref={castViewElement}>
+        <main class="cast-view">
           <section class="cast-heading">
             <p class="eyebrow">纳甲排盘</p>
             <h1>六爻</h1>

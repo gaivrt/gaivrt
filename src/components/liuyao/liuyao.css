@@ -456,8 +456,127 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
     padding-bottom: max(calc(8 * var(--rpx)), env(safe-area-inset-bottom));
     padding-left: max(calc(32 * var(--rpx)), env(safe-area-inset-left));
   }
+  .liuyao-nav { height: calc(64 * var(--rpx)); }
   .liuyao-nav .text-button { margin-left: 0; margin-right: 0; }
-  .cast-heading { padding-top: 14px; }
+  .cast-view {
+    height: calc(100dvh - max(calc(12 * var(--rpx)), env(safe-area-inset-top)) - max(calc(8 * var(--rpx)), env(safe-area-inset-bottom)) - calc(64 * var(--rpx)));
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .cast-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: calc(30 * var(--rpx));
+  }
+  .cast-heading h1 {
+    order: 1;
+    margin: 0;
+    font-size: calc(60 * var(--rpx));
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: calc(20 * var(--rpx));
+    text-indent: calc(20 * var(--rpx));
+  }
+  .cast-heading .eyebrow {
+    order: 2;
+    margin-top: calc(10 * var(--rpx));
+    font-size: calc(22 * var(--rpx));
+    line-height: 1.5;
+    letter-spacing: calc(8 * var(--rpx));
+    text-indent: calc(8 * var(--rpx));
+  }
+  .cast-heading::after {
+    order: 3;
+    content: '';
+    width: calc(48 * var(--rpx));
+    height: calc(2 * var(--rpx));
+    margin-top: calc(20 * var(--rpx));
+    background: var(--ly-gold);
+    opacity: .5;
+  }
+  .cast-heading .date-label {
+    order: 4;
+    margin-top: calc(12 * var(--rpx));
+    font: calc(20 * var(--rpx))/1.5 'Fira Code', monospace;
+    letter-spacing: calc(4 * var(--rpx));
+    opacity: .7;
+  }
+  .question-stage label {
+    margin-bottom: calc(28 * var(--rpx));
+    font-size: calc(28 * var(--rpx));
+    letter-spacing: calc(2 * var(--rpx));
+  }
+  .question-stage input {
+    width: 80%;
+    max-width: calc(560 * var(--rpx));
+    height: calc(88 * var(--rpx));
+    padding: 0 calc(32 * var(--rpx));
+    border: 1px solid var(--ly-faint);
+    border-radius: calc(20 * var(--rpx));
+    background: color-mix(in srgb, var(--ly-card) 35%, var(--ly-bg));
+    font: 400 calc(28 * var(--rpx))/calc(88 * var(--rpx)) Inter, system-ui, sans-serif;
+  }
+  .question-stage p,
+  .cast-actions p {
+    margin-top: calc(20 * var(--rpx));
+    font-size: calc(22 * var(--rpx));
+    letter-spacing: calc(3 * var(--rpx));
+  }
+  .casting-stage { justify-content: center; }
+  .coins {
+    height: calc(96 * var(--rpx));
+    gap: calc(28 * var(--rpx));
+    margin-bottom: calc(40 * var(--rpx));
+  }
+  .coin {
+    width: calc(96 * var(--rpx));
+    height: calc(96 * var(--rpx));
+    border-width: calc(2 * var(--rpx));
+  }
+  .coin i { width: calc(32 * var(--rpx)); height: calc(32 * var(--rpx)); }
+  .coin-yin i { width: calc(40 * var(--rpx)); height: calc(40 * var(--rpx)); border-width: calc(2 * var(--rpx)); }
+  .hexagram { width: calc(488 * var(--rpx)); }
+  .cast-row {
+    grid-template-columns: calc(72 * var(--rpx)) calc(320 * var(--rpx)) calc(72 * var(--rpx));
+    gap: calc(12 * var(--rpx));
+    min-height: calc(40 * var(--rpx));
+  }
+  .cast-row.outer-start { margin-top: calc(20 * var(--rpx)); }
+  .cast-label { font-size: calc(22 * var(--rpx)); }
+  .cast-label:first-child { padding-right: 0; }
+  .cast-label:last-child { padding-left: 0; }
+  .yao-line { height: calc(12 * var(--rpx)); gap: calc(40 * var(--rpx)); }
+  .yao-line .yang-bar,
+  .yao-line .yin-seg { height: calc(12 * var(--rpx)); border-radius: calc(6 * var(--rpx)); }
+  .yao-line .yin-seg { width: calc(140 * var(--rpx)); }
+  .yao-line.empty { height: calc(2 * var(--rpx)); }
+  .progress-label {
+    margin-top: calc(32 * var(--rpx));
+    font-size: calc(24 * var(--rpx));
+    letter-spacing: calc(4 * var(--rpx));
+  }
+  .cast-actions {
+    min-height: calc(200 * var(--rpx));
+    gap: calc(16 * var(--rpx));
+    padding-bottom: max(calc(52 * var(--rpx)), env(safe-area-inset-bottom));
+  }
+  .primary-button {
+    min-width: calc(340 * var(--rpx));
+    height: calc(92 * var(--rpx));
+    padding: 0 calc(64 * var(--rpx));
+    border-radius: calc(20 * var(--rpx));
+    background: color-mix(in srgb, var(--ly-gold) 8%, transparent);
+    color: var(--ly-gold);
+    font: 400 calc(32 * var(--rpx))/calc(92 * var(--rpx)) 'Ma Shan Zheng Liuyao', Georgia, serif;
+    letter-spacing: calc(6 * var(--rpx));
+    text-indent: calc(6 * var(--rpx));
+  }
+  .reset-button {
+    margin-top: 0;
+    padding: calc(10 * var(--rpx)) calc(28 * var(--rpx));
+    font-size: calc(22 * var(--rpx));
+    letter-spacing: calc(4 * var(--rpx));
+  }
   .result-view { padding-inline: 0; }
   .result-shell { width: 100%; }
   .result-heading { margin-bottom: calc(56 * var(--rpx)); padding: calc(40 * var(--rpx)) 0 0; }
@@ -507,7 +626,7 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
   .interpret-text { margin-top: 16px; font-size: 14px; line-height: 2; }
 }
 
-@media (max-height: 700px) and (max-width: 899px) {
+@media (max-height: 700px) and (min-width: 561px) and (max-width: 899px) {
   .liuyao-app {
     padding-top: max(12px, env(safe-area-inset-top));
     padding-bottom: max(8px, env(safe-area-inset-bottom));
@@ -528,11 +647,6 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 }
 
 @media (max-width: 899px) {
-  .cast-view {
-    --mobile-fit: 1;
-    transform: scale(var(--mobile-fit));
-    transform-origin: top center;
-  }
   .result-view {
     overflow: hidden;
     overscroll-behavior: none;
