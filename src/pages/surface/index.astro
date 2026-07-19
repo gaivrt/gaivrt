@@ -13,6 +13,10 @@ const toc = [
 ---
 
 <Layer1Layout title="GAIVRT — Home">
+  <a class="oracle-door" href="/surface/liuyao" aria-label="打开六爻纳甲排盘" title="六爻 · 纳甲排盘">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <em>六爻</em>
+  </a>
   <div class="surface-container home-page">
     <main>
       <section class="hero">
@@ -63,6 +67,52 @@ const toc = [
   main {
     width: 100%;
   }
+
+  .oracle-door {
+    position: fixed;
+    top: var(--space-lg);
+    left: var(--space-lg);
+    z-index: 30;
+    width: 28px;
+    display: grid;
+    gap: 3px;
+    padding: 6px 4px;
+    color: var(--surface-text-secondary);
+    opacity: 0.38;
+    transition: opacity 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  }
+
+  .oracle-door span {
+    height: 1.5px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+
+  .oracle-door span:nth-child(2),
+  .oracle-door span:nth-child(5) {
+    background: linear-gradient(90deg, currentColor 0 42%, transparent 42% 58%, currentColor 58%);
+  }
+
+  .oracle-door em {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 8px);
+    transform: translate(-4px, -50%);
+    width: max-content;
+    color: var(--surface-text-secondary);
+    font: normal 11px/1 Inter, system-ui, sans-serif;
+    letter-spacing: 0.12em;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .oracle-door:hover, .oracle-door:focus-visible {
+    color: #d97757;
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+
+  .oracle-door:hover em, .oracle-door:focus-visible em { opacity: 1; transform: translate(0, -50%); }
 
   /* ── Hero ── */
   .hero {
@@ -194,6 +244,8 @@ const toc = [
   }
 
   @media (max-width: 480px) {
+    .oracle-door { top: var(--space-md); left: var(--space-md); }
+    .oracle-door em { display: none; }
     .toc-row { grid-template-columns: 1fr; gap: 0.15rem 0; }
     .toc-desc { text-align: left; }
   }

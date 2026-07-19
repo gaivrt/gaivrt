@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ThemeToggle from '../../components/shared/ThemeToggle.astro';
+import LiuyaoApp from '../../components/liuyao/LiuyaoApp';
+import '../../styles/layer1.css';
+---
+
+<BaseLayout title="六爻 · 纳甲排盘 — GAIVRT" description="基于《增删卜易》的六爻纳甲排盘工具。">
+  <ThemeToggle />
+  <div class="surface liuyao-page">
+    <LiuyaoApp client:only="solid-js" />
+  </div>
+</BaseLayout>
+
+<style>
+  .liuyao-page { min-height: 100dvh; }
+</style>
