@@ -1,0 +1,61 @@
+# 六爻 Worker · Cloudflare Workers + D1 配置
+#
+# 注意 (auto-mode 实施时由 Leader 填入)：
+#   - <DEV_D1_ID> / <PROD_D1_ID> 在 `wrangler d1 create` 后回填
+#   - secrets 不写在这里，用 `wrangler secret put` 注入：
+#       WX_APPSECRET / DEEPSEEK_API_KEY / CODE_HMAC_SECRET / SESSION_HMAC_SECRET / TURNSTILE_SECRET_KEY
+#       TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID（阶段 8）
+#   - 本地 dev 通过 .dev.vars 提供同名变量
+
+name = "liuyao-worker"
+main = "src/index.ts"
+compatibility_date = "2026-05-09"
+compatibility_flags = ["nodejs_compat"]
+
+# ── 默认（dev）环境 ─────────────────────────────────────
+[vars]
+ENV = "dev"
+WX_APPID = "REPLACE_WITH_WECHAT_APPID"
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-chat"
+FREE_DAILY_QUOTA = "10"
+TZ_OFFSET_MINUTES = "480"
+LEGACY_ROOT_FALLBACK = "true"
+WX_MOCK = "1"
+WEB_ORIGINS = "http://localhost:4321,http://127.0.0.1:4321"
+WEB_SESSION_CREATIONS_PER_IP = "3"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "liuyao-dev"
+database_id = "REPLACE_AFTER_D1_CREATE_DEV"
+
+# ── 生产环境 ───────────────────────────────────────────
+[env.production]
+name = "liuyao-worker-prod"
+routes = [
+  { pattern = "liuyao.gaivrt.online/*", zone_name = "gaivrt.online" }
+]
+
+[env.production.vars]
+ENV = "prod"
+WX_APPID = "REPLACE_WITH_WECHAT_APPID"
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-chat"
+FREE_DAILY_QUOTA = "10"
+TZ_OFFSET_MINUTES = "480"
+LEGACY_ROOT_FALLBACK = "false"
+WX_MOCK = "0"
+WEB_ORIGINS = "https://gaivrt.online,https://www.gaivrt.online"
+WEB_SESSION_CREATIONS_PER_IP = "3"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "liuyao-prod"
+database_id = "REPLACE_AFTER_D1_CREATE_PROD"
+
+# ── Cron Triggers (阶段 8) ────────────────────────────
+# 每小时整点跑一次：卡密余量监控 + 过期 session 清理
+# Telegram secrets 未注入时 monitor 自动 skip（不阻断）
+[triggers]
+crons = ["0 */1 * * *"]

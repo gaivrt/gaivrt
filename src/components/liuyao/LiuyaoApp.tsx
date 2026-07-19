@@ -1,5 +1,6 @@
-import { For, Show, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 import { COIN_LABEL, COIN_MAP, YAO_POS, compile } from '../../lib/liuyao/najia';
+import { LiuyaoInterpretError, interpretHexagram } from '../../lib/liuyao/interpret';
 import './liuyao.css';
 
 type RecordItem = {
@@ -7,6 +8,7 @@ type RecordItem = {
   ts: number;
   question: string;
   result: any;
+  aiText?: string;
 };
 
 const HISTORY_KEY = 'gaivrt_liuyao_history';
@@ -56,10 +58,46 @@ export default function LiuyaoApp() {
   const [result, setResult] = createSignal<any>(null);
   const [view, setView] = createSignal<'cast' | 'result'>('cast');
   const [historyOpen, setHistoryOpen] = createSignal(false);
+  const [interpretOpen, setInterpretOpen] = createSignal(false);
+  const [aiText, setAiText] = createSignal('');
+  const [aiState, setAiState] = createSignal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [aiError, setAiError] = createSignal('');
+  const [quotaRemaining, setQuotaRemaining] = createSignal<number | null>(null);
+  const [currentRecordId, setCurrentRecordId] = createSignal('');
   const [history, setHistory] = createSignal<RecordItem[]>([]);
   const [motionReady, setMotionReady] = createSignal(false);
   let lock = false;
   let lastMotion = 0;
+  let castViewElement: HTMLElement | undefined;
+  let resultViewElement: HTMLElement | undefined;
+  let resultShellElement: HTMLDivElement | undefined;
+  let fitFrame = 0;
+
+  const fitMobileViewport = () => {
+    window.cancelAnimationFrame(fitFrame);
+    fitFrame = window.requestAnimationFrame(() => {
+      const compact = window.matchMedia('(max-width: 899px)').matches;
+      const fit = (element: HTMLElement | undefined, viewport?: HTMLElement) => {
+        if (!element) return;
+        if (!compact) {
+          element.style.removeProperty('--mobile-fit');
+          return;
+        }
+        const availableHeight = viewport?.clientHeight ?? element.clientHeight;
+        const availableWidth = viewport?.clientWidth ?? element.clientWidth;
+        const naturalHeight = element.scrollHeight;
+        const naturalWidth = element.scrollWidth;
+        const scale = Math.min(
+          1,
+          naturalHeight > 0 ? availableHeight / naturalHeight : 1,
+          naturalWidth > 0 ? availableWidth / naturalWidth : 1,
+        );
+        element.style.setProperty('--mobile-fit', String(Math.max(0.1, scale)));
+      };
+      fit(castViewElement);
+      fit(resultShellElement, resultViewElement);
+    });
+  };
 
   const displayYaos = createMemo(() => {
     const values = yaos();
@@ -83,9 +121,19 @@ export default function LiuyaoApp() {
         isYang: r.mk[i] === '1',
         moving: r.dong.includes(i),
         shiYing: r.sy[0] - 1 === i ? '世' : r.sy[1] - 1 === i ? '应' : '',
-        status: typeof r.status?.[i] === 'string' ? r.status[i] : '',
       };
     });
+  });
+
+  const resultChanges = createMemo(() => {
+    const r = result();
+    if (!r?.bian) return [];
+    return r.dong.map((i: number) => ({
+      i,
+      position: YAO_POS[i],
+      from: `${r.q6[i]} ${r.qx[i].substring(2)}`,
+      to: `${r.bian.qin6[i]} ${r.bian.qinx[i].substring(2)}`,
+    }));
   });
 
   const ganzi = createMemo(() => {
@@ -152,6 +200,11 @@ export default function LiuyaoApp() {
     const next = [record, ...readHistory()].slice(0, 200);
     writeHistory(next);
     setHistory(next);
+    setCurrentRecordId(record.id);
+    setAiText('');
+    setAiState('idle');
+    setAiError('');
+    setQuotaRemaining(null);
   };
 
   const reset = () => {
@@ -161,6 +214,22 @@ export default function LiuyaoApp() {
     setQuestion('');
     setView('cast');
     setHistoryOpen(false);
+    setInterpretOpen(false);
+    setAiText('');
+    setAiState('idle');
+    setAiError('');
+    setQuotaRemaining(null);
+    setCurrentRecordId('');
+  };
+
+  const shareResult = async () => {
+    const text = `六爻 · ${result()?.name || '纳甲排盘'}${result()?.bian ? ` → ${result().bian.name}` : ''}`;
+    try {
+      if (navigator.share) await navigator.share({ title: text, text, url: location.href });
+      else await navigator.clipboard?.writeText(`${text}\n${location.href}`);
+    } catch {
+      // Closing the native share sheet is not an error the page needs to surface.
+    }
   };
 
   const openRecord = (record: RecordItem) => {
@@ -169,6 +238,45 @@ export default function LiuyaoApp() {
     setResult(record.result);
     setView('result');
     setHistoryOpen(false);
+    setCurrentRecordId(record.id);
+    setAiText(record.aiText || '');
+    setAiState(record.aiText ? 'success' : 'idle');
+    setAiError('');
+    setQuotaRemaining(null);
+  };
+
+  const persistInterpretation = (text: string) => {
+    const id = currentRecordId();
+    if (!id) return;
+    const next = readHistory().map((record) => record.id === id ? { ...record, aiText: text } : record);
+    writeHistory(next);
+    setHistory(next);
+  };
+
+  const fetchInterpretation = async () => {
+    const r = result();
+    if (!r || aiState() === 'loading') return;
+    setAiState('loading');
+    setAiError('');
+    try {
+      const response = await interpretHexagram(r, question().trim());
+      setAiText(response.text);
+      setQuotaRemaining(response.quota.daily_remaining);
+      setAiState('success');
+      persistInterpretation(response.text);
+    } catch (error) {
+      const message = error instanceof LiuyaoInterpretError
+        ? error.message
+        : '解读服务暂时不可用，请稍后重试。';
+      if (error instanceof LiuyaoInterpretError && error.code === 'QUOTA_EXHAUSTED') setQuotaRemaining(0);
+      setAiError(message);
+      setAiState('error');
+    }
+  };
+
+  const openInterpretation = () => {
+    setInterpretOpen(true);
+    if (!aiText() && aiState() !== 'loading') void fetchInterpretation();
   };
 
   const removeRecord = (id: string, event: MouseEvent) => {
@@ -178,11 +286,33 @@ export default function LiuyaoApp() {
     setHistory(next);
   };
 
-  onMount(() => setHistory(readHistory()));
-  onCleanup(() => window.removeEventListener('devicemotion', handleMotion));
+  createEffect(() => {
+    view();
+    yaos().length;
+    result();
+    queueMicrotask(fitMobileViewport);
+  });
+
+  onMount(() => {
+    setHistory(readHistory());
+    document.documentElement.classList.add('liuyao-page-lock');
+    document.body.classList.add('liuyao-page-lock');
+    window.addEventListener('resize', fitMobileViewport);
+    window.visualViewport?.addEventListener('resize', fitMobileViewport);
+    void document.fonts?.ready.then(fitMobileViewport);
+    fitMobileViewport();
+  });
+  onCleanup(() => {
+    window.removeEventListener('devicemotion', handleMotion);
+    window.removeEventListener('resize', fitMobileViewport);
+    window.visualViewport?.removeEventListener('resize', fitMobileViewport);
+    window.cancelAnimationFrame(fitFrame);
+    document.documentElement.classList.remove('liuyao-page-lock');
+    document.body.classList.remove('liuyao-page-lock');
+  });
 
   return (
-    <div class="liuyao-app">
+    <div class="liuyao-app" classList={{ 'screen-shaking': shaking() }}>
       <header class="liuyao-nav">
         <a href="/surface/" class="back-link" aria-label="返回主页">
           <span class="brand-mark">GAIVRT</span><span class="nav-context">/ SURFACE</span>
@@ -191,53 +321,91 @@ export default function LiuyaoApp() {
       </header>
 
       <Show when={view() === 'cast'} fallback={
-        <main class="result-view">
-          <section class="result-heading">
-            <p class="eyebrow">{ganzi()}</p>
-            <Show when={question()}><p class="result-question">「{question()}」</p></Show>
-            <h1>{result()?.name}</h1>
-            <p class="gua-meta">{result()?.gong}宫{result()?.tp ? ` · ${result().tp}` : ''}</p>
-          </section>
-
-          <section class="result-card" aria-label="六爻排盘">
-            <For each={resultRows()}>{(row) => (
-              <div class={`result-row ${row.moving ? 'moving' : ''} ${row.i === 3 ? 'outer-start' : ''}`}>
-                <span class="god">{row.god}</span>
-                <span class="relation">{row.relation}　{row.branch}</span>
-                <span class={`yao-line ${row.isYang ? 'yang' : 'yin'}`}>{lineParts(row.isYang)}</span>
-                <span class="shi-ying">{row.shiYing}</span>
-                <span class="moving-mark">{row.moving ? '○' : ''}</span>
-                <Show when={row.status}><span class="status">{row.status}</span></Show>
+        <main class="result-view" ref={resultViewElement}>
+          <div class="result-shell" ref={resultShellElement}>
+            <section class="result-heading">
+              <p class="result-ganzi">{ganzi()}</p>
+              <Show when={question()}><p class="result-question">「{question()}」</p></Show>
+              <h1>{result()?.name}</h1>
+              <div class="result-gua-meta">
+                <span>{result()?.gong}宫</span>
+                <Show when={result()?.tp}><span>{result()?.tp}</span></Show>
               </div>
-            )}</For>
-          </section>
+              <i class="result-divider" />
+            </section>
 
-          <Show when={result()?.bian}>
-            <section class="change-card">
-              <p class="eyebrow">之卦</p>
-              <h2>{result().bian.name}</h2>
-              <p>{result().bian.gong}宫</p>
-              <div class="change-list">
-                <For each={result().dong}>{(i: number) => (
-                  <p><span>{YAO_POS[i]}爻</span>{result().q6[i]} {result().qx[i].substring(2)} <b>→</b> {result().bian.qin6[i]} {result().bian.qinx[i].substring(2)}</p>
-                )}</For>
+            <section class="original-yao-card" aria-label="六爻排盘">
+              <For each={resultRows()}>{(row) => (
+                <article class="original-yao-row" classList={{ moving: row.moving, 'trigram-border': row.i === 3 }}>
+                  <span class="original-god">{row.god}</span>
+                  <span class="original-relation">{row.relation} {row.branch}</span>
+                  <span class="original-line-wrap"><span class={`original-line ${row.isYang ? 'yang' : 'yin'} ${row.moving ? 'moving' : ''}`}>{lineParts(row.isYang)}</span></span>
+                  <span class="original-shiying">{row.shiYing}</span>
+                  <span class="original-moving-dot" classList={{ visible: row.moving }} />
+                </article>
+              )}</For>
+            </section>
+
+            <Show when={result()?.bian}>
+              <section class="original-change-card">
+                <header>
+                  <span>变</span><i /><strong>{result()?.bian.name}</strong>
+                </header>
+                <p>{result()?.bian.gong}宫</p>
+                <div class="original-change-list">
+                  <For each={resultChanges()}>{(change) => (
+                    <div><span>{change.position}爻</span><b>{change.from}</b><i>→</i><b>{change.to}</b></div>
+                  )}</For>
+                </div>
+              </section>
+            </Show>
+
+            <footer class="result-footer">
+              <button class="original-interpret-button" type="button" onClick={openInterpretation}>{aiState() === 'loading' ? '推演中' : '解读卦象'}</button>
+              <div class="original-action-row">
+                <button type="button" onClick={() => window.print()}>保存</button>
+                <button type="button" onClick={shareResult}>分享</button>
+              </div>
+              <button class="original-reset-button" type="button" onClick={reset}>重新起卦</button>
+            </footer>
+          </div>
+
+          <Show when={interpretOpen()}>
+            <button class="interpret-mask" type="button" aria-label="关闭卦象解读" onClick={() => setInterpretOpen(false)} />
+            <section class="interpret-sheet" aria-label="卦象解读">
+              <i class="interpret-handle" />
+              <header><h2>卦象解读</h2><button type="button" onClick={() => setInterpretOpen(false)}>×</button></header>
+              <div class="interpret-body">
+                <div class="interpret-summary">
+                  <strong>{result()?.name}</strong>
+                  <span>{result()?.gong}宫{result()?.tp ? ` · ${result().tp}` : ''}{result()?.bian ? ` · 变 ${result().bian.name}` : ''}</span>
+                  <Show when={question()}><p>「{question()}」</p></Show>
+                </div>
+                <Show when={aiText()} fallback={
+                  <div class="interpret-state" classList={{ error: aiState() === 'error' }} aria-live="polite">
+                    <Show when={aiState() === 'loading'} fallback={
+                      <>
+                        <p>{aiError() || '正在准备解读。'}</p>
+                        <button type="button" onClick={() => void fetchInterpretation()}>重新推演</button>
+                      </>
+                    }>
+                      <span class="interpret-pulse" aria-hidden="true"><i /><i /><i /></span>
+                      <p>正在结合月令、日辰与动爻推演卦象……</p>
+                      <small>通常需要十几秒，请不要关闭页面</small>
+                    </Show>
+                  </div>
+                }>
+                  <p class="interpret-text">{aiText()}</p>
+                </Show>
+                <Show when={quotaRemaining() !== null}>
+                  <p class="interpret-quota">今日还可解读 {quotaRemaining()} 次</p>
+                </Show>
               </div>
             </section>
           </Show>
-
-          <Show when={result()?.shiYingRel || result()?.features?.length}>
-            <section class="notes-card">
-              <p class="eyebrow">卦象提示</p>
-              <p>{result()?.shiYingRel}</p>
-              <Show when={result()?.features}><p>{result().features}</p></Show>
-            </section>
-          </Show>
-
-          <p class="disclaimer">本页仅作传统文化研究与个人参考，不替代医疗、法律或财务等专业意见。</p>
-          <button class="primary-button" type="button" onClick={reset}>重新起卦</button>
         </main>
       }>
-        <main class="cast-view">
+        <main class="cast-view" ref={castViewElement}>
           <section class="cast-heading">
             <p class="eyebrow">纳甲排盘</p>
             <h1>六爻</h1>
