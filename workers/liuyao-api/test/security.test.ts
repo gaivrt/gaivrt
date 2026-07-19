@@ -13,7 +13,7 @@ import {
 function env(overrides: Record<string, unknown> = {}) {
   return {
     ENV: 'prod',
-    WEB_ORIGINS: 'https://gaivrt.online,https://www.gaivrt.online',
+    WEB_ORIGINS: 'https://gaivrt.com,https://www.gaivrt.com,https://gaivrt.online,https://www.gaivrt.online',
     WEB_SESSION_CREATIONS_PER_IP: '3',
     TURNSTILE_SECRET_KEY: 'turnstile-secret',
     SESSION_HMAC_SECRET: 'session-secret',
@@ -25,14 +25,16 @@ function env(overrides: Record<string, unknown> = {}) {
 
 test('Web origins are exact, not suffix matches', () => {
   const bindings = env();
+  assert.equal(isAllowedWebOrigin(bindings, 'https://gaivrt.com'), true);
   assert.equal(isAllowedWebOrigin(bindings, 'https://gaivrt.online'), true);
+  assert.equal(isAllowedWebOrigin(bindings, 'https://evil.gaivrt.com'), false);
   assert.equal(isAllowedWebOrigin(bindings, 'https://evil.gaivrt.online'), false);
   assert.equal(isAllowedWebOrigin(bindings, undefined), false);
 });
 
 test('Turnstile success is bound to an allowed production hostname', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(JSON.stringify({ success: true, hostname: 'gaivrt.online' }));
+  globalThis.fetch = async () => new Response(JSON.stringify({ success: true, hostname: 'gaivrt.com' }));
   try {
     await verifyTurnstile(env(), 'valid-token', '203.0.113.5');
   } finally {
@@ -102,9 +104,9 @@ test('Production Web sessions use a secure HttpOnly host cookie', () => {
 test('CORS credentials are returned only to the allowed site', async () => {
   const allowed = await worker.fetch(new Request('https://liuyao.gaivrt.online/quota', {
     method: 'OPTIONS',
-    headers: { Origin: 'https://gaivrt.online', 'Access-Control-Request-Method': 'GET' },
+    headers: { Origin: 'https://gaivrt.com', 'Access-Control-Request-Method': 'GET' },
   }), env(), {} as any);
-  assert.equal(allowed.headers.get('Access-Control-Allow-Origin'), 'https://gaivrt.online');
+  assert.equal(allowed.headers.get('Access-Control-Allow-Origin'), 'https://gaivrt.com');
   assert.equal(allowed.headers.get('Access-Control-Allow-Credentials'), 'true');
 
   const denied = await worker.fetch(new Request('https://liuyao.gaivrt.online/quota', {

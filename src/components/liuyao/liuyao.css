@@ -15,7 +15,7 @@ body.liuyao-page-lock {
 body.liuyao-page-lock { position: fixed; inset: 0; }
 
 .liuyao-app {
-  --ly-bg: #f5f2ec;
+  --ly-bg: var(--surface-bg);
   --ly-fg: #2a2520;
   --ly-accent: #c0603a;
   --ly-muted: #9a9088;
@@ -36,17 +36,15 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 }
 
 .liuyao-nav { height: 34px; display: flex; align-items: center; gap: 16px; }
-.back-link, .text-button, .reset-button {
+.text-button, .reset-button {
   font: 12px/1.2 Inter, system-ui, sans-serif;
   letter-spacing: .11em;
   color: var(--ly-muted);
 }
-.back-link { display: inline-flex; align-items: baseline; gap: 8px; }
-.brand-mark { color: var(--surface-text); letter-spacing: .18em; }
-.nav-context { font-size: 9px; letter-spacing: .14em; opacity: .55; }
+.liuyao-nav .site-back-link { --site-back-padding: 0; flex: 0 0 auto; }
 .liuyao-nav .text-button { margin-left: auto; margin-right: 34px; }
 .text-button, .reset-button { border: 0; background: none; cursor: pointer; padding: 10px; }
-.back-link:hover, .text-button:hover, .reset-button:hover { color: var(--surface-text); }
+.text-button:hover, .reset-button:hover { color: var(--surface-text); }
 
 .cast-view { height: calc(100dvh - 72px); min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
 .cast-heading, .result-heading { text-align: center; padding-top: clamp(14px, 4vh, 42px); }
@@ -266,7 +264,7 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 .empty-history { margin-top: 40px; color: rgba(80, 75, 65, .55); text-align: center; }
 
 [data-theme="dark"] .liuyao-app {
-  --ly-bg: #1a1917;
+  --ly-bg: var(--surface-bg);
   --ly-fg: #e8e4dc;
   --ly-accent: #d97757;
   --ly-muted: #6b655c;
@@ -274,7 +272,7 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
   --ly-gold: #c9a96e;
   --ly-line: #e8e4dc;
   --ly-card: #242220;
-  --ly-card-row: #1a1917;
+  --ly-card-row: var(--surface-bg);
 }
 
 @keyframes coinShake { 0% { transform: rotate(-10deg); } 50% { transform: rotate(12deg); } 100% { transform: rotate(-8deg); } }
@@ -451,7 +449,6 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
     padding-bottom: max(calc(8 * var(--rpx)), env(safe-area-inset-bottom));
     padding-left: max(calc(32 * var(--rpx)), env(safe-area-inset-left));
   }
-  .nav-context { display: none; }
   .liuyao-nav .text-button { margin-left: 0; margin-right: 0; }
   .cast-heading { padding-top: 14px; }
   .result-view { padding-inline: 0; }

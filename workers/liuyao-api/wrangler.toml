@@ -46,13 +46,13 @@ FREE_DAILY_QUOTA = "10"
 TZ_OFFSET_MINUTES = "480"
 LEGACY_ROOT_FALLBACK = "false"
 WX_MOCK = "0"
-WEB_ORIGINS = "https://gaivrt.online,https://www.gaivrt.online"
+WEB_ORIGINS = "https://gaivrt.com,https://www.gaivrt.com,https://gaivrt.online,https://www.gaivrt.online"
 WEB_SESSION_CREATIONS_PER_IP = "3"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "liuyao-prod"
-database_id = "REPLACE_AFTER_D1_CREATE_PROD"
+database_id = "6294cdc1-d814-4e92-a00e-9ad5de67e685"
 
 # ── Cron Triggers (阶段 8) ────────────────────────────
 # 每小时整点跑一次：卡密余量监控 + 过期 session 清理

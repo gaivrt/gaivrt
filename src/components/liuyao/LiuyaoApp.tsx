@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createMemo, createSignal, onCleanup, onMount } from 'solid-js';
 import { COIN_LABEL, COIN_MAP, YAO_POS, compile } from '../../lib/liuyao/najia';
 import { LiuyaoInterpretError, interpretHexagram } from '../../lib/liuyao/interpret';
+import '../../styles/back-link.css';
 import './liuyao.css';
 
 type RecordItem = {
@@ -38,6 +39,10 @@ function writeHistory(items: RecordItem[]) {
 
 function createRecordId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function rollCoins() {
+  return Array.from({ length: 3 }, () => Math.random() > 0.5 ? 3 : 2);
 }
 
 function lineParts(isYang: boolean) {
@@ -170,16 +175,17 @@ export default function LiuyaoApp() {
     await enableMotion();
     if (lock || yaos().length >= 6) return;
     lock = true;
+    setCoins(rollCoins());
     setShaking(true);
     navigator.vibrate?.(35);
 
     let frames = 0;
     const timer = window.setInterval(() => {
-      setCoins(Array.from({ length: 3 }, () => Math.random() > 0.5 ? 3 : 2));
+      setCoins(rollCoins());
       frames += 1;
       if (frames < 12) return;
       window.clearInterval(timer);
-      const finalCoins = Array.from({ length: 3 }, () => Math.random() > 0.5 ? 3 : 2);
+      const finalCoins = rollCoins();
       const sum = finalCoins.reduce((total, coin) => total + coin, 0);
       const value = COIN_MAP[sum];
       const next = [...yaos(), value];
@@ -314,8 +320,8 @@ export default function LiuyaoApp() {
   return (
     <div class="liuyao-app" classList={{ 'screen-shaking': shaking() }}>
       <header class="liuyao-nav">
-        <a href="/surface/" class="back-link" aria-label="返回主页">
-          <span class="brand-mark">GAIVRT</span><span class="nav-context">/ SURFACE</span>
+        <a href="/surface/" class="site-back-link" aria-label="Back to GAIVRT">
+          <span class="site-back-arrow">←</span><span class="site-back-name">GAIVRT</span>
         </a>
         <button class="text-button" type="button" onClick={() => setHistoryOpen(true)}>历史</button>
       </header>
@@ -412,7 +418,7 @@ export default function LiuyaoApp() {
             <p class="date-label">{new Intl.DateTimeFormat('zh-CN', { dateStyle: 'long' }).format(new Date())}</p>
           </section>
 
-          <Show when={yaos().length === 0} fallback={
+          <Show when={yaos().length === 0 && !shaking()} fallback={
             <section class="casting-stage">
               <div class="coins" aria-label="三枚铜钱">
                 <For each={coins()}>{(coin) => <span class={`coin ${coin === 3 ? 'coin-yang' : 'coin-yin'} ${shaking() ? 'shaking' : ''}`}><i /></span>}</For>
@@ -428,7 +434,11 @@ export default function LiuyaoApp() {
                   </div>
                 )}</For>
               </div>
-              <p class="progress-label">{result() ? `${result().name} · ${result().gong}宫` : `第 ${yaos().length} / 6 爻`}</p>
+              <p class="progress-label">{result()
+                ? `${result().name} · ${result().gong}宫`
+                : shaking()
+                  ? `第 ${yaos().length + 1} 爻 · 摇动中`
+                  : `第 ${yaos().length} / 6 爻`}</p>
             </section>
           }>
             <section class="question-stage">

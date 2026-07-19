@@ -1,0 +1,25 @@
+.site-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: var(--site-back-padding, var(--space-lg) 0 var(--space-md));
+  color: var(--surface-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: color var(--transition-smooth);
+}
+
+.site-back-link:hover {
+  color: var(--surface-accent);
+}
+
+.site-back-arrow {
+  transition: transform var(--transition-smooth);
+}
+
+.site-back-link:hover .site-back-arrow {
+  transform: translateX(-3px);
+}

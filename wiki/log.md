@@ -1,5 +1,7 @@
 # Wiki Log
 
+- 2026-07-19: Replaced the Liuyao-only `GAIVRT / SURFACE` navigation treatment with the shared Surface back-link component styling used by Blog on both desktop and mobile.
+- 2026-07-19: Unified the Liuyao dark canvas with the site background, made all three coins visible from the first shaking frame, allowed the actual `gaivrt.com` Pages origins, and initialized the production D1 schema; Worker deployment still awaits production DeepSeek and Turnstile secrets.
 - 2026-07-19: Made the Liuyao phone casting and result views fit the visual viewport dynamically across safe areas and short screens, with document scrolling, overscroll, and touch dragging disabled.
 - 2026-07-19: Restored real DeepSeek Liuyao interpretation through a Turnstile-protected anonymous Web session, set the shared daily quota to 10, cached returned text locally, and added Worker security tests; deployment remains pending approval.
 - 2026-07-19: Replaced the desktop Liuyao interpretation bottom sheet with a full-height right-side reading folio; mobile interpretation styling remains unchanged.
