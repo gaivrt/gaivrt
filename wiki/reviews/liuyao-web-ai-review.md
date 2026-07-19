@@ -2,7 +2,7 @@
 
 - Contract: [Liuyao Web AI Contract](../contracts/liuyao-web-ai.md)
 - Verdict: PASS
-- Reviewed: 2026-07-20, including the first-party Worker domain, mobile casting restoration, and haptic lifecycle.
+- Reviewed: 2026-07-20, post-deployment checkpoint for commit `8ef1cbf` and the first-party Worker domain.
 - Validation evidence:
   - Worker TypeScript check passed (`tsc --noEmit`).
   - Eight focused Worker security tests passed under Node 22 for exact-origin and credentialed CORS, the live `gaivrt.com` origin plus retained aliases, Turnstile hostname binding, missing-host rejection, HMACed-IP anonymous-session limits, 10-use quota initialization, and production cookie attributes.
@@ -21,9 +21,13 @@
   - Worker typecheck and all eight security tests passed with the CORS fixture targeting the new API hostname; the production Astro build passed.
   - The initial vibration runs synchronously in the cast activation handler before asynchronous, failure-tolerant motion permission work. The cast lock still prevents overlap, and the archived completion vibration patterns remain intact.
   - True-mobile CDP checks at 390 × 844 and 320 × 568 found exact body/app viewport dimensions with no document overflow. Six casts and the complete result footer remained visible; whole-cast scaling is removed, while result-only fit remains active (`0.854` in the 390 px result check).
+  - The production page for release `8ef1cbf` loaded the expected `LiuyaoApp.A8MsNbc6.js` and `LiuyaoApp.bu90IYP7.css` assets, and the deployed JavaScript contains the first-party `https://liuyao.gaivrt.com` API default.
+  - The new custom domain returned `200` from `/health`. An unauthenticated `/quota` request with `Origin: https://gaivrt.com` returned the expected `401` with exact ACAO and `Access-Control-Allow-Credentials: true`, confirming the deployed route and credentialed CORS boundary.
+  - The deployment checkpoint also passed Astro production build, Worker typecheck, all eight security tests, and Wrangler production dry-run.
+  - `appearance: 'interaction-only'` changes only when the managed Turnstile UI becomes visible; token verification remains server-side and still binds the response to an allowed page hostname before issuing the host-only Secure, HttpOnly session cookie.
 - Blocking issues: none.
 - Residual risk:
-  - The new `liuyao.gaivrt.com` custom-domain route and matching Pages API default are not yet a verified production checkpoint. Deployment must be followed by DNS/health, exact credentialed CORS, `Set-Cookie`, cookie reuse on `/quota`, anonymous-session allowance, and one real DeepSeek interpretation smoke test.
+  - The route, release assets, first-party API default, health endpoint, and unauthenticated credentialed-CORS response are verified in production. A real managed-Turnstile completion, `/auth/web` `Set-Cookie`, cookie reuse on authenticated `/quota`, anonymous-session allowance, and one DeepSeek interpretation are still pending; health and `401` checks do not prove those stateful steps.
   - If the retained public `gaivrt.online` site aliases serve pages rather than redirecting to canonical `gaivrt.com`, their browser session would again be cross-site to the new API default. Release verification must confirm those aliases redirect to `gaivrt.com` or deliberately select the retained `liuyao.gaivrt.online` API route.
   - The production D1 schema is already initialized, so deployment must target the reviewed binding and must not re-create or replace the database.
   - Browser-local history is intentionally device-specific; clearing site data removes the cached interpretation and anonymous identity.
