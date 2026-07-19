@@ -2,7 +2,7 @@
 
 - Contract: [Liuyao Web AI Contract](../contracts/liuyao-web-ai.md)
 - Verdict: PASS
-- Reviewed: 2026-07-20, including the production Turnstile public-key fallback and Invisible Widget render fix.
+- Reviewed: 2026-07-20, including the production Turnstile challenge lifecycle and Liuyao title typography adjustments.
 - Validation evidence:
   - Worker TypeScript check passed (`tsc --noEmit`).
   - Eight focused Worker security tests passed under Node 22 for exact-origin and credentialed CORS, the live `gaivrt.com` origin plus retained aliases, Turnstile hostname binding, missing-host rejection, HMACed-IP anonymous-session limits, 10-use quota initialization, and production cookie attributes.
@@ -13,11 +13,13 @@
   - Blog and Liuyao computed styles matched for back-link font family, size, weight, letter spacing, color, gap, alignment, and destination on desktop and at 390 px; the observed `inline-flex` to `flex` computed-display difference is normal flex-item blockification and does not change presentation.
   - The production D1 binding now uses the resolved database identifier, and migrations `0001` and `0002` were applied successfully to the remote production database.
   - A production build without `PUBLIC_TURNSTILE_SITE_KEY` passed and bundled only the reviewed public Turnstile site key (`0x4AAAAAAD5K63nb7W6yEBGD`); secret scanning found no Worker secret or DeepSeek credential in the browser bundle.
-  - The client no longer sends the invalid `size: 'invisible'` render option. Invisible behavior remains owned by the Cloudflare Widget configuration, while callback, timeout, cleanup, hostname verification, session cookie, and exact-origin server controls are unchanged. The corrected Pages build passed; live end-to-end interpretation is not claimed by this check.
+  - The client no longer sends the invalid `size: 'invisible'` render option. Invisible behavior remains owned by the Cloudflare Widget configuration. The same explicit-render path produced a callback with Cloudflare's official Invisible test site key; no token value was logged or persisted.
+  - The client challenge guard is now 60 seconds and handles Cloudflare error-code, timeout, expiry, and unsupported-browser callbacks through the existing single-settlement cleanup path. The Turnstile mount is no longer clipped or transparent and is positioned in a fixed safe-area corner, allowing any provider-controlled challenge UI to remain usable without weakening hostname verification, session-cookie, or exact-origin controls.
+  - The main and changed hexagram titles now use the intended regular display weight and keep four-character names such as `火雷噬嗑` on one line; the production Astro build passed without style or compile errors.
   - The reviewed production Worker and D1 binding are deployed; all four required secret names are present. `/health` returned `200` with `env=prod` and `legacy_root_fallback=false`, while unauthenticated `/quota` from `https://gaivrt.com` returned the expected JSON `401` with exact `Access-Control-Allow-Origin` and credentials headers.
 - Blocking issues: none.
 - Residual risk:
-  - The Worker is live, but the full Turnstile anonymous-session and DeepSeek interpretation smoke test remains pending until a new Pages build containing both the production site-key fallback and corrected render options is deployed.
+  - The Worker is live, but the full production Turnstile anonymous-session and DeepSeek interpretation smoke test remains pending until a new Pages build containing the 60-second lifecycle callbacks and unclipped mount is deployed. The production challenge endpoint returned `200`, but neither automation nor the user's current browser received a token before timeout; the next real-browser test must capture the surfaced callback error code instead of treating this as success.
   - The production D1 schema is already initialized, so deployment must target the reviewed binding and must not re-create or replace the database.
   - Browser-local history is intentionally device-specific; clearing site data removes the cached interpretation and anonymous identity.
   - The per-IP anonymous-session cap can affect visitors sharing a heavily used NAT, but it limits session creation rather than authenticated interpretation and fails with an explicit retry-later message.

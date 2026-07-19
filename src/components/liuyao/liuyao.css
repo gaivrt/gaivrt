@@ -144,9 +144,10 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 .result-heading h1 {
   margin: 18px 0 0;
   color: var(--ly-gold);
-  font: 700 clamp(48px, 6vw, 66px)/1.15 'Ma Shan Zheng Liuyao', Georgia, var(--font-display), serif;
+  font: 400 clamp(48px, 6vw, 66px)/1.15 'Ma Shan Zheng Liuyao', Georgia, var(--font-display), serif;
   letter-spacing: .18em;
   text-indent: .18em;
+  white-space: nowrap;
 }
 .result-gua-meta { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
 .result-gua-meta span {
@@ -194,7 +195,7 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 .original-change-card header { display: flex; align-items: center; gap: 12px; }
 .original-change-card header > span { color: var(--ly-accent); font: 20px/1 'Ma Shan Zheng Liuyao', Georgia, serif; }
 .original-change-card header > i { flex: 1; height: 1px; background: var(--ly-gold); opacity: .25; }
-.original-change-card header > strong { color: var(--ly-gold); font: 700 25px/1.2 'Ma Shan Zheng Liuyao', Georgia, serif; letter-spacing: .16em; }
+.original-change-card header > strong { color: var(--ly-gold); font: 400 25px/1.2 'Ma Shan Zheng Liuyao', Georgia, serif; letter-spacing: .16em; white-space: nowrap; }
 .original-change-card > p { margin-top: 6px; color: var(--ly-muted); font-size: 11px; letter-spacing: .1em; text-align: right; }
 .original-change-list { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
 .original-change-list > div { display: grid; grid-template-columns: 56px 1fr 20px 1fr; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 6px; background: var(--ly-card-row); }
@@ -243,7 +244,12 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 .interpret-pulse i:nth-child(2) { animation-delay: .18s; }
 .interpret-pulse i:nth-child(3) { animation-delay: .36s; }
 .interpret-quota { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--ly-faint); color: var(--ly-muted); font: 10px/1.5 Inter, system-ui, sans-serif; letter-spacing: .12em; }
-.liuyao-turnstile { position: fixed; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.liuyao-turnstile {
+  position: fixed;
+  z-index: 300;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+}
 
 .history-mask { position: fixed; inset: 0; z-index: 80; background: rgba(31, 30, 29, .28); backdrop-filter: blur(3px); }
 .history-sheet {
@@ -368,6 +374,7 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
     line-height: 1.08;
     letter-spacing: .13em;
     text-indent: 0;
+    white-space: nowrap;
   }
   .result-gua-meta { justify-content: flex-start; margin-top: 20px; }
   .result-gua-meta span { padding: 0; border-radius: 0; background: none; }

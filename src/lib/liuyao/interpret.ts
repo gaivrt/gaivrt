@@ -5,7 +5,7 @@ const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?
 const TEST_SITE_KEY = '1x00000000000000000000AA';
 const PRODUCTION_SITE_KEY = '0x4AAAAAAD5K63nb7W6yEBGD';
 const TURNSTILE_LOAD_TIMEOUT_MS = 15_000;
-const TURNSTILE_CHALLENGE_TIMEOUT_MS = 25_000;
+const TURNSTILE_CHALLENGE_TIMEOUT_MS = 60_000;
 
 type Quota = {
   daily_remaining: number;
@@ -151,8 +151,10 @@ async function getTurnstileToken(): Promise<string> {
       widgetId = turnstile.render(mount, {
         sitekey,
         callback: (token: string) => finish(token),
-        'error-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证失败，请重试。')),
+        'error-callback': (code: string) => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', `人机验证失败（${code}），请重试。`)),
         'expired-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证已过期，请重试。')),
+        'timeout-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证挑战已超时，请重试。')),
+        'unsupported-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '当前浏览器不支持人机验证，请更新浏览器后重试。')),
       });
     } catch {
       finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '无法启动人机验证，请重试。'));
