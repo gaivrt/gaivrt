@@ -2,7 +2,7 @@
 
 - Contract: [Liuyao Web AI Contract](../contracts/liuyao-web-ai.md)
 - Verdict: PASS
-- Reviewed: 2026-07-20, including the production Turnstile public-key fallback and Worker pre-release checks.
+- Reviewed: 2026-07-20, including the production Turnstile public-key fallback and Invisible Widget render fix.
 - Validation evidence:
   - Worker TypeScript check passed (`tsc --noEmit`).
   - Eight focused Worker security tests passed under Node 22 for exact-origin and credentialed CORS, the live `gaivrt.com` origin plus retained aliases, Turnstile hostname binding, missing-host rejection, HMACed-IP anonymous-session limits, 10-use quota initialization, and production cookie attributes.
@@ -13,10 +13,11 @@
   - Blog and Liuyao computed styles matched for back-link font family, size, weight, letter spacing, color, gap, alignment, and destination on desktop and at 390 px; the observed `inline-flex` to `flex` computed-display difference is normal flex-item blockification and does not change presentation.
   - The production D1 binding now uses the resolved database identifier, and migrations `0001` and `0002` were applied successfully to the remote production database.
   - A production build without `PUBLIC_TURNSTILE_SITE_KEY` passed and bundled only the reviewed public Turnstile site key (`0x4AAAAAAD5K63nb7W6yEBGD`); secret scanning found no Worker secret or DeepSeek credential in the browser bundle.
+  - The client no longer sends the invalid `size: 'invisible'` render option. Invisible behavior remains owned by the Cloudflare Widget configuration, while callback, timeout, cleanup, hostname verification, session cookie, and exact-origin server controls are unchanged. The corrected Pages build passed; live end-to-end interpretation is not claimed by this check.
   - The reviewed production Worker and D1 binding are deployed; all four required secret names are present. `/health` returned `200` with `env=prod` and `legacy_root_fallback=false`, while unauthenticated `/quota` from `https://gaivrt.com` returned the expected JSON `401` with exact `Access-Control-Allow-Origin` and credentials headers.
 - Blocking issues: none.
 - Residual risk:
-  - The Worker is live, but the full Turnstile anonymous-session and DeepSeek interpretation smoke test remains pending until the Pages build containing the production site-key fallback is deployed.
+  - The Worker is live, but the full Turnstile anonymous-session and DeepSeek interpretation smoke test remains pending until a new Pages build containing both the production site-key fallback and corrected render options is deployed.
   - The production D1 schema is already initialized, so deployment must target the reviewed binding and must not re-create or replace the database.
   - Browser-local history is intentionally device-specific; clearing site data removes the cached interpretation and anonymous identity.
   - The per-IP anonymous-session cap can affect visitors sharing a heavily used NAT, but it limits session creation rather than authenticated interpretation and fails with an explicit retry-later message.

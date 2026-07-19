@@ -150,7 +150,6 @@ async function getTurnstileToken(): Promise<string> {
     try {
       widgetId = turnstile.render(mount, {
         sitekey,
-        size: 'invisible',
         callback: (token: string) => finish(token),
         'error-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证失败，请重试。')),
         'expired-callback': () => finish(undefined, new LiuyaoInterpretError('TURNSTILE_FAILED', '人机验证已过期，请重试。')),
