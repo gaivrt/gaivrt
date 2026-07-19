@@ -27,7 +27,15 @@ function readHistory(): RecordItem[] {
 }
 
 function writeHistory(items: RecordItem[]) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 200)));
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 200)));
+  } catch {
+    // Casting and result viewing must still work when storage is unavailable.
+  }
+}
+
+function createRecordId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 function lineParts(isYang: boolean) {
@@ -75,7 +83,7 @@ export default function LiuyaoApp() {
         isYang: r.mk[i] === '1',
         moving: r.dong.includes(i),
         shiYing: r.sy[0] - 1 === i ? '世' : r.sy[1] - 1 === i ? '应' : '',
-        status: r.status?.[i]?.join(' · ') || '',
+        status: typeof r.status?.[i] === 'string' ? r.status[i] : '',
       };
     });
   });
@@ -139,12 +147,11 @@ export default function LiuyaoApp() {
   const openResult = () => {
     const r = result();
     if (!r) return;
-    const record: RecordItem = { id: crypto.randomUUID(), ts: Date.now(), question: question().trim(), result: r };
+    setView('result');
+    const record: RecordItem = { id: createRecordId(), ts: Date.now(), question: question().trim(), result: r };
     const next = [record, ...readHistory()].slice(0, 200);
     writeHistory(next);
     setHistory(next);
-    setView('result');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const reset = () => {
@@ -177,7 +184,9 @@ export default function LiuyaoApp() {
   return (
     <div class="liuyao-app">
       <header class="liuyao-nav">
-        <a href="/surface/" class="back-link" aria-label="返回主页">← GAIVRT</a>
+        <a href="/surface/" class="back-link" aria-label="返回主页">
+          <span class="brand-mark">GAIVRT</span><span class="nav-context">/ SURFACE</span>
+        </a>
         <button class="text-button" type="button" onClick={() => setHistoryOpen(true)}>历史</button>
       </header>
 
@@ -262,7 +271,7 @@ export default function LiuyaoApp() {
           </Show>
 
           <footer class="cast-actions">
-            <Show when={yaos().length < 6} fallback={<button class="primary-button" type="button" onClick={openResult}>查看排盘</button>}>
+            <Show when={yaos().length < 6} fallback={<button class="primary-button" type="button" disabled={!result()} onClick={openResult}>{result() ? '查看排盘' : '正在装卦'}</button>}>
               <button class="primary-button" type="button" disabled={shaking()} onClick={shake}>{yaos().length ? '继续' : '摇卦'}</button>
               <p>{motionReady() ? '也可轻摇手机' : '点击后可启用轻摇手机'}</p>
             </Show>
