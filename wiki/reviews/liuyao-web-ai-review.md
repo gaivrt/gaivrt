@@ -2,7 +2,7 @@
 
 - Contract: [Liuyao Web AI Contract](../contracts/liuyao-web-ai.md)
 - Verdict: PASS
-- Reviewed: 2026-07-20, post-deployment checkpoint for commit `8ef1cbf` and the first-party Worker domain.
+- Reviewed: 2026-07-20, including the bounded Turnstile `300*`/`600*` same-Widget retry checkpoint.
 - Validation evidence:
   - Worker TypeScript check passed (`tsc --noEmit`).
   - Eight focused Worker security tests passed under Node 22 for exact-origin and credentialed CORS, the live `gaivrt.com` origin plus retained aliases, Turnstile hostname binding, missing-host rejection, HMACed-IP anonymous-session limits, 10-use quota initialization, and production cookie attributes.
@@ -25,6 +25,9 @@
   - The new custom domain returned `200` from `/health`. An unauthenticated `/quota` request with `Origin: https://gaivrt.com` returned the expected `401` with exact ACAO and `Access-Control-Allow-Credentials: true`, confirming the deployed route and credentialed CORS boundary.
   - The deployment checkpoint also passed Astro production build, Worker typecheck, all eight security tests, and Wrangler production dry-run.
   - `appearance: 'interaction-only'` changes only when the managed Turnstile UI becomes visible; token verification remains server-side and still binds the response to an allowed page hostname before issuing the host-only Secure, HttpOnly session cookie.
+  - The client explicitly uses Turnstile `retry: auto` with a 2.5-second interval. On the first `300*` or `600*` callback it returns `false`, allowing the provider-owned retry to continue in the same Widget; a second retryable failure or any non-retryable error settles once, removes the Widget, and exposes an actionable message. The independent 60-second guard remains a final upper bound.
+  - Focused CDP regression injected `300010`, observed `errorReturn=false`, then completed the same lifecycle through quota `401`, `/auth/web`, and `/interpret`; success removed the Widget exactly once, displayed “同一验证框自动恢复成功”, and produced no runtime exceptions. Captured options were `retry=auto`, `retry-interval=2500`, and `appearance=interaction-only`.
+  - Single-settlement guards prevent a late retry callback from resolving or rejecting twice. The successful token is forwarded once to `/auth/web`, cleanup removes the source Widget, and server-side Turnstile single-use validation remains unchanged; no client token cache or reuse path was added.
 - Blocking issues: none.
 - Residual risk:
   - The route, release assets, first-party API default, health endpoint, and unauthenticated credentialed-CORS response are verified in production. A real managed-Turnstile completion, `/auth/web` `Set-Cookie`, cookie reuse on authenticated `/quota`, anonymous-session allowance, and one DeepSeek interpretation are still pending; health and `401` checks do not prove those stateful steps.
