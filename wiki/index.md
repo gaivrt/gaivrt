@@ -6,3 +6,5 @@
 - [R2 event rebuild review](reviews/r2-event-rebuild-review.md)
 - [Liuyao Web AI contract](contracts/liuyao-web-ai.md)
 - [Liuyao Web AI review](reviews/liuyao-web-ai-review.md)
+- [Liuyao owner IP and progress contract](contracts/liuyao-owner-ip-progress.md)
+- [Liuyao owner IP and progress review](reviews/liuyao-owner-ip-progress-review.md)
