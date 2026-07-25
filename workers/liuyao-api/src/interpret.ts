@@ -25,8 +25,7 @@ const MAX_CONTENT_CHARS = 12000;     // 单条消息硬上限，防 prompt injec
 
 // 模型白名单：非白名单值回落到 env.DEEPSEEK_MODEL，避免被滥用调昂贵模型
 const ALLOWED_MODELS = new Set<string>([
-  'deepseek-chat',
-  'deepseek-reasoner',
+  'deepseek-v4-flash',
 ]);
 
 interface InterpretBody {
@@ -40,7 +39,7 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.min(Math.max(n, lo), hi);
 }
 
-function validateAndNormalize(raw: unknown): DeepSeekRequest {
+export function validateAndNormalize(raw: unknown): DeepSeekRequest {
   if (!raw || typeof raw !== 'object') fail('BAD_REQUEST', 'json body required');
   const b = raw as InterpretBody;
   if (!Array.isArray(b.messages) || b.messages.length === 0) {

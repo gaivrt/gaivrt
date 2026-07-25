@@ -5,6 +5,7 @@
 - Non-goals: account registration, email login, payments, cross-device history, streaming output, changing the Najia algorithm, or deploying without required production secrets.
 - Acceptance criteria:
   - DeepSeek credentials remain Worker-only and no secret enters the browser bundle;
+  - browser and legacy mini-program requests resolve to the currently supported `deepseek-v4-flash` model in explicit non-thinking mode, preserving the retired `deepseek-chat` behavior while retired aliases fall back to the production default;
   - a Web visitor receives an HttpOnly anonymous session only after successful Turnstile verification;
   - the browser API and session cookie remain first-party to `gaivrt.com`, so a successful verification is reused instead of creating repeated anonymous sessions;
   - authenticated interpretation requests share the existing quota, usage-log, and idempotent refund path;

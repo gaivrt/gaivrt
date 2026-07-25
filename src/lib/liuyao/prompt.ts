@@ -786,9 +786,11 @@ function buildUserMessage(r, question) {
     '7. 按规定输出结构生成断辞。禁止泛泛而谈，禁止打太极，禁止在已经本地算好的部分重复推导。';
 }
 
+export const INTERPRETATION_MODEL = 'deepseek-v4-flash';
+
 export function buildInterpretationPayload(r: any, question: string) {
   return {
-    model: 'deepseek-chat',
+    model: INTERPRETATION_MODEL,
     max_tokens: 2500,
     temperature: 1.0,
     stream: false,

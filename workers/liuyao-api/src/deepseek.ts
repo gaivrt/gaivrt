@@ -54,6 +54,7 @@ export async function callDeepSeek(env: Env, req: DeepSeekRequest): Promise<Call
     messages: req.messages,
     max_tokens: req.max_tokens ?? 2500,
     temperature: req.temperature ?? 1.0,
+    thinking: { type: 'disabled' as const },
     stream: false as const,
   };
 

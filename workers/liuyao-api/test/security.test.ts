@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import worker from '../src/index';
 import { ApiError } from '../src/errors';
 import { prepareEnsureQuotaRow } from '../src/db';
+import { validateAndNormalize } from '../src/interpret';
+import { callDeepSeek } from '../src/deepseek';
+import { INTERPRETATION_MODEL } from '../../../src/lib/liuyao/prompt';
 import {
   consumeSessionCreationAllowance,
   isAllowedWebOrigin,
@@ -22,6 +25,38 @@ function env(overrides: Record<string, unknown> = {}) {
     ...overrides,
   } as any;
 }
+
+test('Browser interpretation payload uses the supported DeepSeek V4 Flash model', () => {
+  assert.equal(INTERPRETATION_MODEL, 'deepseek-v4-flash');
+});
+
+test('Legacy DeepSeek model aliases fall back to the production default', () => {
+  const messages = [{ role: 'user', content: '测试' }];
+  assert.equal(validateAndNormalize({ messages, model: 'deepseek-chat' }).model, undefined);
+  assert.equal(validateAndNormalize({ messages, model: 'deepseek-v4-flash' }).model, 'deepseek-v4-flash');
+});
+
+test('DeepSeek V4 Flash preserves the legacy non-thinking behavior', async () => {
+  const originalFetch = globalThis.fetch;
+  let upstreamBody: any;
+  globalThis.fetch = async (_input, init) => {
+    upstreamBody = JSON.parse(String(init?.body));
+    return new Response(JSON.stringify({
+      choices: [{ index: 0, message: { role: 'assistant', content: '卦辞' }, finish_reason: 'stop' }],
+    }));
+  };
+  try {
+    await callDeepSeek(env({
+      DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+      DEEPSEEK_MODEL: 'deepseek-v4-flash',
+      DEEPSEEK_API_KEY: 'test-key',
+    }), { messages: [{ role: 'user', content: '测试' }] });
+    assert.equal(upstreamBody.model, 'deepseek-v4-flash');
+    assert.deepEqual(upstreamBody.thinking, { type: 'disabled' });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test('Web origins are exact, not suffix matches', () => {
   const bindings = env();

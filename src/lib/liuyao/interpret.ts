@@ -54,7 +54,7 @@ function friendlyError(code: string, fallback?: string) {
   if (code === 'QUOTA_EXHAUSTED') return '今天的 10 次免费解读已经用完，请明天再来。';
   if (code === 'TURNSTILE_FAILED') return '人机验证没有通过，请稍后重试。';
   if (code === 'RATE_LIMIT') return '当前网络创建了过多匿名会话，请明天再试。';
-  if (code === 'UPSTREAM_FAIL') return 'DeepSeek 暂时没有返回结果，本次不会扣次数。';
+  if (code === 'UPSTREAM_FAIL') return '机缘未至，暂未得辞；本次不计次数。';
   if (code === 'UNAUTHENTICATED') return '匿名会话已失效，请重新验证。';
   return fallback || '解读服务暂时不可用，请稍后重试。';
 }
@@ -219,6 +219,6 @@ export async function interpretHexagram(result: any, question: string) {
     body: JSON.stringify(buildInterpretationPayload(result, question)),
   });
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new LiuyaoInterpretError('BAD_FORMAT', 'DeepSeek 没有返回解读正文。');
+  if (!content) throw new LiuyaoInterpretError('BAD_FORMAT', '卦辞未成，请稍后再试。');
   return { text: stripMd(content), quota: data.quota_after, traceId: data.trace_id };
 }

@@ -1,5 +1,6 @@
 # Wiki Log
 
+- 2026-07-25: Migrated Liuyao interpretation from the retired `deepseek-chat` alias to non-thinking `deepseek-v4-flash`, retained legacy-client fallback and quota refunds, and replaced provider-branded failure copy with divination-language wording.
 - 2026-07-20: Kept retryable Turnstile `300*`/`600*` failures in the same Widget for one bounded automatic retry, avoiding a full verification restart while preventing an endless spinner.
 - 2026-07-20: Moved Liuyao browser auth to the first-party `liuyao.gaivrt.com` Worker domain to preserve anonymous cookies, restored archived mobile casting proportions without whole-page scaling, and moved Android haptics into the initiating click frame.
 - 2026-07-20: Expanded the production Turnstile challenge lifecycle with usable provider UI and actionable callbacks, and kept regular-weight four-character hexagram names on one line; production token issuance still awaits a fresh real-browser check.

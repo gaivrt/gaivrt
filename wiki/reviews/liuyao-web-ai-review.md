@@ -2,8 +2,14 @@
 
 - Contract: [Liuyao Web AI Contract](../contracts/liuyao-web-ai.md)
 - Verdict: PASS
-- Reviewed: 2026-07-20, including the bounded Turnstile `300*`/`600*` same-Widget retry checkpoint.
+- Reviewed: 2026-07-25, focused re-check of the DeepSeek V4 model migration; earlier 2026-07-20 Turnstile review evidence is retained below.
 - Validation evidence:
+  - DeepSeek's official [V4 release note](https://api-docs.deepseek.com/news/news260424/) confirms that `deepseek-chat` was the non-thinking alias of `deepseek-v4-flash` before retirement at 2026-07-24 15:59 UTC. The official [thinking-mode guide](https://api-docs.deepseek.com/guides/thinking_mode) states that direct V4 requests default to thinking enabled.
+  - The browser constant, Worker allowlist, and both dev/production `DEEPSEEK_MODEL` vars consistently select `deepseek-v4-flash`. A legacy `deepseek-chat` request is rejected by the allowlist and reaches `callDeepSeek` with no request model, so production falls back to `env.DEEPSEEK_MODEL`.
+  - Node 22 independently passed all eleven focused Worker security tests and Worker `tsc --noEmit`; Astro production build passed; Wrangler production dry-run bundled successfully and reported `DEEPSEEK_MODEL: "deepseek-v4-flash"`.
+  - Focused upstream-body regression captured the serialized DeepSeek request and confirmed both `model: "deepseek-v4-flash"` and `thinking: { type: "disabled" }`, preserving the retired `deepseek-chat` non-thinking behavior for browser calls and legacy requests that fall back to the production default.
+  - Provider-branded browser errors were replaced with divination-language copy while retaining the same `UPSTREAM_FAIL` and `BAD_FORMAT` control flow; Worker error logging and the authenticated consume/refund path are unchanged.
+  - The migration does not modify API-key handling, auth middleware, CORS, quota consume/refund, usage logging, or client cache code.
   - Worker TypeScript check passed (`tsc --noEmit`).
   - Eight focused Worker security tests passed under Node 22 for exact-origin and credentialed CORS, the live `gaivrt.com` origin plus retained aliases, Turnstile hostname binding, missing-host rejection, HMACed-IP anonymous-session limits, 10-use quota initialization, and production cookie attributes.
   - Astro production build passed with a production Turnstile site key.
