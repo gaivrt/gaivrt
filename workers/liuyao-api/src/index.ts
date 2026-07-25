@@ -18,7 +18,13 @@ import { getQuota } from './quota';
 import { interpret, legacyRoot } from './interpret';
 import { redeem } from './redeem';
 import { runCron } from './cron';
-import { createWebSession, isAllowedWebOrigin, webSessionCookieOptions, WEB_SESSION_COOKIE } from './webAuth';
+import {
+  createWebSession,
+  isAllowedWebOrigin,
+  isOwnerIpAllowed,
+  webSessionCookieOptions,
+  WEB_SESSION_COOKIE,
+} from './webAuth';
 
 type AppEnv = { Bindings: Env; Variables: AppVars };
 
@@ -129,6 +135,7 @@ app.post('/auth/web', async (c) => {
 // GET /quota —— 当前三档 quota
 app.get('/quota', authMw, async (c) => {
   const sess = c.get('session')!;
+  const ownerUnlimited = await isOwnerIpAllowed(c.env, c.req.header('cf-connecting-ip') || 'unknown');
   const row = await getQuota(c.env, sess.userId);
   return c.json({
     ok: true,
@@ -138,6 +145,7 @@ app.get('/quota', authMw, async (c) => {
       permanent_balance: row.permanent_balance,
       unlimited_until:   row.unlimited_until,
       total_consumed:    row.total_consumed,
+      owner_unlimited:   ownerUnlimited,
     },
   });
 });
@@ -148,7 +156,8 @@ app.post('/interpret', authMw, async (c) => {
   const traceId = c.get('traceId')!;
   let body: unknown;
   try { body = await c.req.json(); } catch { fail('BAD_REQUEST', 'json body required'); }
-  const result = await interpret(c.env, sess.userId, body, traceId);
+  const ownerUnlimited = await isOwnerIpAllowed(c.env, c.req.header('cf-connecting-ip') || 'unknown');
+  const result = await interpret(c.env, sess.userId, body, traceId, ownerUnlimited);
   return c.json({ ok: true, data: result });
 });
 

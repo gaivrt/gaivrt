@@ -107,8 +107,20 @@ export interface InterpretResult {
     permanent_balance: number;
     unlimited_until: number;
     total_consumed: number;
+    owner_unlimited: boolean;
   };
   trace_id: string;
+}
+
+export async function acquireInterpretQuota(
+  env: Env,
+  userId: number,
+  ownerUnlimited: boolean,
+): Promise<QuotaSource> {
+  if (ownerUnlimited) return 'unlimited';
+  const cs = await consume(env, userId);
+  if (!cs.ok) fail('QUOTA_EXHAUSTED', 'no quota left');
+  return cs.source;
 }
 
 /**
@@ -122,13 +134,12 @@ export async function interpret(
   userId: number,
   rawBody: unknown,
   traceId: string,
+  ownerUnlimited = false,
 ): Promise<InterpretResult> {
   const req = validateAndNormalize(rawBody);
 
   // 1. validate 在 consume 前，BAD_REQUEST 直接抛不需 refund
-  const cs = await consume(env, userId);
-  if (!cs.ok) fail('QUOTA_EXHAUSTED', 'no quota left');
-  const source = cs.source;
+  const source = await acquireInterpretQuota(env, userId, ownerUnlimited);
 
   // 2. consume 之后任何 throw 都要 refund
   let logId: number | null = null;
@@ -179,6 +190,7 @@ export async function interpret(
         permanent_balance: after.permanent_balance,
         unlimited_until:   after.unlimited_until,
         total_consumed:    after.total_consumed,
+        owner_unlimited:   ownerUnlimited,
       },
       trace_id: traceId,
     };

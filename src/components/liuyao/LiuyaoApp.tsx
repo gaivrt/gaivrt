@@ -68,6 +68,8 @@ export default function LiuyaoApp() {
   const [aiState, setAiState] = createSignal<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [aiError, setAiError] = createSignal('');
   const [quotaRemaining, setQuotaRemaining] = createSignal<number | null>(null);
+  const [ownerUnlimited, setOwnerUnlimited] = createSignal(false);
+  const [interpretProgress, setInterpretProgress] = createSignal(0);
   const [currentRecordId, setCurrentRecordId] = createSignal('');
   const [history, setHistory] = createSignal<RecordItem[]>([]);
   const [motionReady, setMotionReady] = createSignal(false);
@@ -76,6 +78,37 @@ export default function LiuyaoApp() {
   let resultViewElement: HTMLElement | undefined;
   let resultShellElement: HTMLDivElement | undefined;
   let fitFrame = 0;
+  let interpretProgressTimer = 0;
+
+  const interpretPhase = createMemo(() => {
+    const progress = interpretProgress();
+    if (progress < 22) return '起卦';
+    if (progress < 45) return '察变';
+    if (progress < 68) return '定用';
+    if (progress < 88) return '推应';
+    if (progress < 100) return '候辞';
+    return '成辞';
+  });
+
+  const stopInterpretProgress = () => {
+    window.clearInterval(interpretProgressTimer);
+    interpretProgressTimer = 0;
+  };
+
+  const startInterpretProgress = () => {
+    stopInterpretProgress();
+    const startedAt = performance.now();
+    setInterpretProgress(7);
+    interpretProgressTimer = window.setInterval(() => {
+      const elapsed = performance.now() - startedAt;
+      const target = elapsed < 1_200 ? 21
+        : elapsed < 3_000 ? 43
+          : elapsed < 5_500 ? 66
+            : elapsed < 9_000 ? 84
+              : 92;
+      setInterpretProgress((current) => Math.min(target, current + Math.max(1, (target - current) * 0.22)));
+    }, 180);
+  };
 
   const fitMobileViewport = () => {
     window.cancelAnimationFrame(fitFrame);
@@ -217,6 +250,8 @@ export default function LiuyaoApp() {
     setAiState('idle');
     setAiError('');
     setQuotaRemaining(null);
+    setOwnerUnlimited(false);
+    setInterpretProgress(0);
   };
 
   const reset = () => {
@@ -231,6 +266,9 @@ export default function LiuyaoApp() {
     setAiState('idle');
     setAiError('');
     setQuotaRemaining(null);
+    setOwnerUnlimited(false);
+    stopInterpretProgress();
+    setInterpretProgress(0);
     setCurrentRecordId('');
   };
 
@@ -255,6 +293,8 @@ export default function LiuyaoApp() {
     setAiState(record.aiText ? 'success' : 'idle');
     setAiError('');
     setQuotaRemaining(null);
+    setOwnerUnlimited(false);
+    setInterpretProgress(0);
   };
 
   const persistInterpretation = (text: string) => {
@@ -270,13 +310,20 @@ export default function LiuyaoApp() {
     if (!r || aiState() === 'loading') return;
     setAiState('loading');
     setAiError('');
+    startInterpretProgress();
     try {
       const response = await interpretHexagram(r, question().trim());
       setAiText(response.text);
       setQuotaRemaining(response.quota.daily_remaining);
+      setOwnerUnlimited(response.quota.owner_unlimited === true);
+      stopInterpretProgress();
+      setInterpretProgress(100);
+      await new Promise((resolve) => window.setTimeout(resolve, 260));
       setAiState('success');
       persistInterpretation(response.text);
     } catch (error) {
+      stopInterpretProgress();
+      setInterpretProgress(0);
       const message = error instanceof LiuyaoInterpretError
         ? error.message
         : '解读服务暂时不可用，请稍后重试。';
@@ -319,6 +366,7 @@ export default function LiuyaoApp() {
     window.removeEventListener('resize', fitMobileViewport);
     window.visualViewport?.removeEventListener('resize', fitMobileViewport);
     window.cancelAnimationFrame(fitFrame);
+    stopInterpretProgress();
     document.documentElement.classList.remove('liuyao-page-lock');
     document.body.classList.remove('liuyao-page-lock');
   });
@@ -401,7 +449,21 @@ export default function LiuyaoApp() {
                         <button type="button" onClick={() => void fetchInterpretation()}>重新推演</button>
                       </>
                     }>
-                      <span class="interpret-pulse" aria-hidden="true"><i /><i /><i /></span>
+                      <div
+                        class="interpret-progress"
+                        role="progressbar"
+                        aria-label="卦象推演进度"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow={Math.round(interpretProgress())}
+                        style={`--interpret-progress: ${interpretProgress()}%`}
+                      >
+                        <div class="interpret-progress-meta">
+                          <span>{interpretPhase()}</span>
+                          <b>{Math.round(interpretProgress())}%</b>
+                        </div>
+                        <i><span /></i>
+                      </div>
                       <p>正在结合月令、日辰与动爻推演卦象……</p>
                       <small>通常需要十几秒，请不要关闭页面</small>
                     </Show>
@@ -409,8 +471,10 @@ export default function LiuyaoApp() {
                 }>
                   <p class="interpret-text">{aiText()}</p>
                 </Show>
-                <Show when={quotaRemaining() !== null}>
-                  <p class="interpret-quota">今日还可解读 {quotaRemaining()} 次</p>
+                <Show when={ownerUnlimited() || quotaRemaining() !== null}>
+                  <p class="interpret-quota">
+                    {ownerUnlimited() ? '当前网络今日不限次数' : `今日还可解读 ${quotaRemaining()} 次`}
+                  </p>
                 </Show>
               </div>
             </section>

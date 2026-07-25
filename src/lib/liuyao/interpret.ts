@@ -14,6 +14,7 @@ type Quota = {
   permanent_balance: number;
   unlimited_until: number;
   total_consumed: number;
+  owner_unlimited?: boolean;
 };
 
 type ApiEnvelope<T> = {

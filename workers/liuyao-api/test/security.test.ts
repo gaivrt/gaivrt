@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import worker from '../src/index';
 import { ApiError } from '../src/errors';
 import { prepareEnsureQuotaRow } from '../src/db';
-import { validateAndNormalize } from '../src/interpret';
+import { acquireInterpretQuota, validateAndNormalize } from '../src/interpret';
 import { callDeepSeek } from '../src/deepseek';
 import { INTERPRETATION_MODEL } from '../../../src/lib/liuyao/prompt';
 import {
   consumeSessionCreationAllowance,
+  hashIp,
   isAllowedWebOrigin,
+  isOwnerIpAllowed,
   verifyTurnstile,
   webSessionCookieOptions,
 } from '../src/webAuth';
@@ -115,6 +117,37 @@ test('Anonymous session creation is capped per HMACed IP and day', async () => {
     consumeSessionCreationAllowance(bindings, '203.0.113.5'),
     (error: unknown) => error instanceof ApiError && error.code === 'RATE_LIMIT',
   );
+});
+
+test('Owner allowance compares only the HMACed IP fingerprint', async () => {
+  const expectedHash = await hashIp(env(), '203.0.113.5');
+  let boundHash = '';
+  const bindings = env({
+    DB: {
+      prepare: () => ({
+        bind: (value: string) => {
+          boundHash = value;
+          return { first: async () => ({ allowed: 1 }) };
+        },
+      }),
+    },
+  });
+
+  assert.equal(await isOwnerIpAllowed(bindings, '203.0.113.5'), true);
+  assert.equal(boundHash, expectedHash);
+  assert.notEqual(boundHash, '203.0.113.5');
+  assert.equal(await isOwnerIpAllowed(bindings, 'unknown'), false);
+});
+
+test('Owner interpretation bypass does not read or decrement user quota', async () => {
+  const bindings = env({
+    DB: {
+      prepare: () => {
+        throw new Error('quota database must not be touched');
+      },
+    },
+  });
+  assert.equal(await acquireInterpretQuota(bindings, 42, true), 'unlimited');
 });
 
 test('New users receive ten daily interpretations', () => {

@@ -48,7 +48,7 @@ export async function verifyTurnstile(env: Env, token: string, ip: string): Prom
   }
 }
 
-async function hashIp(env: Env, ip: string): Promise<string> {
+export async function hashIp(env: Env, ip: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(env.SESSION_HMAC_SECRET),
@@ -58,6 +58,17 @@ async function hashIp(env: Env, ip: string): Promise<string> {
   );
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip));
   return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function isOwnerIpAllowed(env: Env, ip: string): Promise<boolean> {
+  if (!ip || ip === 'unknown') return false;
+  const ipHash = await hashIp(env, ip);
+  const row = await env.DB.prepare(
+    `SELECT 1 AS allowed
+       FROM owner_ip_allowlist
+      WHERE ip_hash = ? AND enabled = 1`,
+  ).bind(ipHash).first<{ allowed: number }>();
+  return row?.allowed === 1;
 }
 
 export async function consumeSessionCreationAllowance(env: Env, ip: string): Promise<void> {

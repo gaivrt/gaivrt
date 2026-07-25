@@ -239,10 +239,11 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 .interpret-state small { margin-top: 8px; font: 10px/1.5 Inter, system-ui, sans-serif; letter-spacing: .1em; opacity: .7; }
 .interpret-state button { margin-top: 22px; padding: 10px 24px; border: 1px solid var(--ly-faint); border-radius: 6px; background: transparent; color: var(--ly-muted); font: 11px/1 Inter, system-ui, sans-serif; letter-spacing: .14em; cursor: pointer; }
 .interpret-state button:hover { border-color: var(--ly-muted); color: var(--ly-fg); }
-.interpret-pulse { display: flex; gap: 8px; margin-bottom: 24px; }
-.interpret-pulse i { width: 5px; height: 5px; border-radius: 50%; background: var(--ly-accent); animation: interpretPulse 1.5s ease-in-out infinite; }
-.interpret-pulse i:nth-child(2) { animation-delay: .18s; }
-.interpret-pulse i:nth-child(3) { animation-delay: .36s; }
+.interpret-progress { width: min(100%, 320px); margin-bottom: 24px; color: var(--ly-muted); }
+.interpret-progress-meta { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; font: 10px/1 Inter, system-ui, sans-serif; letter-spacing: .18em; }
+.interpret-progress-meta b { color: var(--ly-gold); font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+.interpret-progress > i { display: block; height: 1px; overflow: visible; background: color-mix(in srgb, var(--ly-gold) 20%, transparent); }
+.interpret-progress > i > span { display: block; width: var(--interpret-progress); height: 1px; background: var(--ly-gold); box-shadow: 0 0 8px color-mix(in srgb, var(--ly-gold) 32%, transparent); transition: width .5s cubic-bezier(.22, .9, .35, 1); }
 .interpret-quota { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--ly-faint); color: var(--ly-muted); font: 10px/1.5 Inter, system-ui, sans-serif; letter-spacing: .12em; }
 .liuyao-turnstile {
   position: fixed;
@@ -291,7 +292,6 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 }
 @keyframes interpretIn { from { transform: translate(-50%, 100%); } to { transform: translate(-50%, 0); } }
 @keyframes interpretSideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@keyframes interpretPulse { 0%, 100% { opacity: .22; transform: translateY(0); } 50% { opacity: .9; transform: translateY(-4px); } }
 @keyframes sheetIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 @media (min-width: 900px) {
@@ -707,5 +707,6 @@ body.liuyao-page-lock { position: fixed; inset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .coin.shaking, .history-sheet, .liuyao-app.screen-shaking, .interpret-pulse i { animation: none; }
+  .coin.shaking, .history-sheet, .liuyao-app.screen-shaking { animation: none; }
+  .interpret-progress > i > span { transition: none; }
 }
