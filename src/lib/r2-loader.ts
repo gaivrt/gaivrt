@@ -114,6 +114,10 @@ function extractTitle(body: string, filename: string): string {
 
 /** Clean date strings like "2026-02-26-星期四" → "2026-02-26" */
 function cleanDate(raw: unknown): string | undefined {
+  // YAML parses unquoted ISO dates into Date objects. Preserve their UTC day.
+  if (raw instanceof Date) {
+    return Number.isNaN(raw.getTime()) ? undefined : raw.toISOString().slice(0, 10);
+  }
   if (!raw) return undefined;
   const str = String(raw);
   const match = str.match(/^\d{4}-\d{2}-\d{2}/);
@@ -195,7 +199,7 @@ export function r2Loader({ prefix }: R2LoaderOptions): Loader {
         untouched.delete(id);
 
         try {
-          const digest = generateDigest(file.raw);
+          const digest = generateDigest(`date-v2\n${file.raw}`);
           if (store.has(id) && store.get(id)?.digest === digest) continue;
 
           const { data: rawFm, content: rawBody } = matter(file.raw);
