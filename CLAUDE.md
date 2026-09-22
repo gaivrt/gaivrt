@@ -14,12 +14,12 @@ No test runner is configured. Validate manually: `yarn build` for build errors, 
 
 ## Tech Stack
 
-- **Astro 5.5** (static output) + **Solid.js 1.9** (client islands) + **Three.js** (WebGL)
+- **Astro 5.5** (static output) + **Solid.js 1.9** (client islands) + **Three.js 0.172** (WebGL)
 - **TypeScript** strict mode, JSX configured for Solid.js
 - Pure scoped CSS — no Tailwind or CSS framework
 - GLSL shaders imported as assets (`vite.assetsInclude: ['**/*.glsl']`)
 - Content via Astro Content Collections (Markdown, Obsidian-compatible)
-- Cloudflare R2 for remote content; falls back to local `src/content/` when R2 env vars are missing
+- Cloudflare R2 for remote content via `@aws-sdk/client-s3`; `gray-matter` for frontmatter, `https-proxy-agent` for proxied fetches; falls back to local `src/content/` when R2 env vars are missing
 
 ## Architecture: Three-Layer Experience
 
@@ -32,13 +32,22 @@ Engine: `src/lib/particles/ParticleText.ts` (config-driven, `src/lib/constants.t
 Component: `src/components/entrance/ParticleEntrance.tsx` (Solid.js island).
 
 ### Layer 1 — Surface (`pages/surface/`)
-Warm paper editorial theme (#f5f0e8 background). Cormorant Garamond display font. SVG feTurbulence paper grain texture overlay. WebGL ripple produces warm golden glow on mouse movement (candlelight effect via `mix-blend-mode: soft-light`). After 30s, SVG cracks appear; clicking them transitions to Layer 2.
+Warm paper editorial theme (#f5f0e8 background). Cormorant Garamond display font. SVG feTurbulence paper grain texture overlay. WebGL ripple produces warm golden glow on mouse movement (candlelight effect via `mix-blend-mode: soft-light`). After ~30s of idle, ink stains appear; clicking while they're visible floods the page and transitions to Layer 2.
 
-Homepage: centered hero with avatar + book-style TOC navigation (no navbar).
-Subpages: minimal `← GAIVRT` back-link via `BackLink.astro` (no sticky nav).
+Routes:
+- `/surface/` — centered hero with avatar + book-style TOC grid (no sticky nav)
+- `/surface/about`, `/surface/cv`, `/surface/research` — single-entry pages that render the first item of the matching R2 collection inline; show a fallback message if the collection is empty
+- `/surface/blog/[...page]` paginated list (20/page) + `/surface/blog/[slug]` single post
+- `/surface/projects/[...page]` + `/surface/projects/[slug]`
+- `/surface/publications/[...page]` + `/surface/publications/[slug]`
+
+All content pages use `BackLink.astro` (`← GAIVRT`) — there is no sticky navbar. `NavBar.astro` and `BreathingCard.astro` exist but are currently unused; prefer extending `BackLink.astro` / `TableOfContents.astro` unless a full nav is being introduced.
 
 ### Layer 2 — Depths (`pages/depths/`)
-Deep warm black (#0a0806) with floating text fragments. Content progressively unlocks based on visit count (thresholds in `src/lib/constants.ts`). Core page (`depths/core.astro`) is the final endpoint.
+Deep warm black (#0a0806) with floating text fragments. Content progressively unlocks based on visit count (thresholds in `src/lib/constants.ts`).
+- `/depths/` — floating fragment space
+- `/depths/thoughts/[...slug]` — individual entries from the `thoughts` collection (each entry has an `unlockAt` visit-count gate, default 3)
+- `/depths/core` — final endpoint, redirects unless visit count ≥ 10
 
 ### Progressive Unlock System
 
@@ -48,7 +57,14 @@ Visit count (localStorage via `visitStore.ts`) drives content revelation. Thresh
 - **8 visits**: core link begins flickering on `/depths/`
 - **10 visits**: full access to `/depths/core` (redirects otherwise)
 
-InkBleed idle delay also scales with visits: >10 → 15s, >5 → 18s, default → 30s.
+InkBleed idle delay also scales with visits: >10 → 15s, >5 → 18s, default → 30s (see `InkBleedOverlay.tsx:14-16`).
+
+### Theme System
+
+Real light/dark/system theme support, not just stylistic toggling:
+- `src/components/shared/ThemeToggle.astro` — fixed top-right control cycling **light → dark → system**, persisted in `localStorage('gaivrt_theme')`.
+- Sets `data-theme-pref` on `<html>`; resolves to `data-theme` (`light` | `dark`), respecting `prefers-color-scheme` when pref is `system`.
+- `InkBleedOverlay.tsx` watches `data-theme` via `MutationObserver` and rebuilds the engine with theme-appropriate visuals: `#1a1410` stain + `multiply` blend in light, `#d4c4a8` stain + `screen` blend in dark.
 
 ### Key architectural boundaries
 - **Layouts**: `BaseLayout` → `Layer1Layout` (warm paper) or `Layer2Layout` (deep warm black)
@@ -85,19 +101,39 @@ Canvas 2D particle text engine for the entrance page:
 
 ## Content Pipeline
 
-- Blog posts sourced from Obsidian vault (symlinked or copied to `src/content/blog/`)
+- Markdown sourced from an Obsidian vault, synced to Cloudflare R2 via the `remotely-save` plugin (or symlinked locally for dev)
 - Custom remark plugins in `src/plugins/`: wikilinks (`[[link]]`), callouts (`> [!type]`), mark highlights, video embeds
 - Rehype plugins: slug, autolink headings, KaTeX math
-- `src/content/config.ts` defines Zod schemas for `blog` and `thoughts` collections
-- `r2-loader.ts` is a custom Astro Content Loader: checks R2 env vars → S3 or local fallback, cleans Obsidian/Typora markdown artifacts (zero-width spaces, non-breaking spaces, single-$ math normalization), supports `HTTPS_PROXY`
-- `thoughts` collection has `unlockAt` field (default 3) — content gated by visit count
+- `r2-loader.ts` is a custom Astro Content Loader: checks R2 env vars → S3 or local fallback, cleans Obsidian/Typora markdown artifacts (zero-width spaces, non-breaking spaces, single-`$` math normalization), supports `HTTPS_PROXY` / `https_proxy`
+
+### Collections (`src/content/config.ts`)
+
+Seven collections, all loaded through `r2Loader({ prefix })`:
+
+| Collection | R2 Prefix | Schema highlights |
+|---|---|---|
+| `blog` | `gaivrt/Blog/` | title, date?, description?, tags[], draft |
+| `thoughts` | `gaivrt/Thoughts/` | title?, date?, **unlockAt** (default 3) — visit-count gate |
+| `projects` | `gaivrt/Projects/` | title, date?, description?, tags[], url?, github? |
+| `publications` | `gaivrt/Publications/` | title, date?, authors?, venue?, url? |
+| `research` | `gaivrt/Research/` | title, date?, description?, status? |
+| `cv` | `gaivrt/CV/` | title? |
+| `about` | `gaivrt/About/` | title? |
+
+When `R2_*` env vars are missing, `r2Loader` falls back to local `src/content/{collection}/*.md`.
 
 ## Environment Variables
 
 Defined in `.env` (see `.env.example`):
 - `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` — Cloudflare R2 access
 - Accessed via `import.meta.env`
-- `.npmrc` contains proxy config for network access
+- `HTTPS_PROXY` / `https_proxy` (read directly from `process.env` by `r2-loader.ts` and `scripts/list-r2.mjs`) — routes outbound R2 traffic through a proxy when set
+
+## Operational Tooling
+
+- `scripts/list-r2.mjs` — diagnostic script that lists the first few objects under `gaivrt/Blog/` and `gaivrt/Thoughts/` to verify R2 credentials. Run via `node scripts/list-r2.mjs` with the standard `R2_*` env vars loaded.
+- `.github/workflows/scheduled-rebuild.yml` — GitHub Actions cron `0 */6 * * *` that POSTs to a Cloudflare Pages deploy hook (`secrets.CF_DEPLOY_HOOK`). Also manually dispatchable. Purpose: refresh the static build against the latest R2 content without waiting on a code push.
+- `docs/` — `DEPLOY.md` (Cloudflare Pages + R2 + scheduled-rebuild runbook), `PLAN.md` (original design philosophy and architecture intent), `WALKTHROUGH.md` (feature walkthrough). Read these when deeper context on intent is needed.
 
 ## Conventions
 
