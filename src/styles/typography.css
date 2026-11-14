@@ -240,6 +240,8 @@ p + p { margin-top: var(--space-md); }
 
 /* --- Images --- */
 .prose img {
+  width: auto;
+  max-height: 80vh;
   border-radius: 6px;
   margin: var(--space-md) auto;
 }

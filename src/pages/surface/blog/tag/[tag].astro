@@ -1,0 +1,33 @@
+---
+import { getCollection } from 'astro:content';
+import Layer1Layout from '../../../../layouts/Layer1Layout.astro';
+import BackLink from '../../../../components/surface/BackLink.astro';
+import PostList from '../../../../components/surface/PostList.astro';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog', ({ data }) => !data.draft))
+    .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
+  const tags = new Set(posts.flatMap((p) => p.data.tags));
+  return [...tags].map((tag) => ({
+    params: { tag },
+    props: { posts: posts.filter((p) => p.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+---
+
+<Layer1Layout title={`#${tag} — GAIVRT`}>
+  <div class="surface-container">
+    <BackLink href="/surface/blog/" label="Blog" />
+    <main>
+      <h1>#{tag}</h1>
+      <PostList posts={posts} />
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  h1 { margin: 0 0 var(--space-lg); }
+</style>

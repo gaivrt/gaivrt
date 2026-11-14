@@ -2,7 +2,7 @@ import { defineCollection, z } from 'astro:content';
 import { r2Loader } from '../lib/r2-loader';
 
 const blog = defineCollection({
-  loader: r2Loader({ prefix: 'gaivrt/Blog/' }),
+  loader: r2Loader({ prefix: 'gaivrt/Blog/', stripTitleHeading: true }),
   schema: z.object({
     title: z.string(),
     date: z.coerce.date().optional(),

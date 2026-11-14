@@ -14,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 
 interface R2LoaderOptions {
   prefix: string;
+  /** Drop a leading `# heading` that repeats the title (for pages that print the title themselves) */
+  stripTitleHeading?: boolean;
 }
 
 interface RawFile {
@@ -159,7 +161,7 @@ function normalizeMarkdown(raw: string): string {
 
 // ── Loader ───────────────────────────────────────────
 
-export function r2Loader({ prefix }: R2LoaderOptions): Loader {
+export function r2Loader({ prefix, stripTitleHeading = false }: R2LoaderOptions): Loader {
   return {
     name: 'r2-loader',
     async load(ctx) {
@@ -202,12 +204,16 @@ export function r2Loader({ prefix }: R2LoaderOptions): Loader {
         untouched.delete(id);
 
         try {
-          const digest = generateDigest(`date-v2\n${file.raw}`);
+          const digest = generateDigest(`v3-${stripTitleHeading}\n${file.raw}`);
           if (store.has(id) && store.get(id)?.digest === digest) continue;
 
           const { data: rawFm, content: rawBody } = matter(file.raw);
-          const body = normalizeMarkdown(rawBody);
+          let body = normalizeMarkdown(rawBody);
           const frontmatter = normalizeFrontmatter(rawFm, body, file.name);
+          if (stripTitleHeading) {
+            const lead = body.match(/^\s*#[ \t]+(.+)\n?/);
+            if (lead && lead[1].trim() === frontmatter.title) body = body.slice(lead[0].length);
+          }
           const data = await parseData({ id, data: frontmatter });
           const rendered = await renderMarkdown(body);
           store.set({ id, data, body, rendered, digest });

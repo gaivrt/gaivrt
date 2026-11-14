@@ -104,3 +104,13 @@ img, video, svg {
     --space-2xl: 3rem;
   }
 }
+
+/* Reveal animations start from opacity 0: with reduced motion, jump to the end state */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

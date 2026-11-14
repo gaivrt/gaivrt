@@ -1,0 +1,131 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+
+// Consecutive posts of the same year share one heading (posts arrive sorted by date)
+const groups: { year: string; items: { post: CollectionEntry<'blog'>; i: number }[] }[] = [];
+posts.forEach((post, i) => {
+  const year = post.data.date ? String(post.data.date.getFullYear()) : '';
+  const last = groups[groups.length - 1];
+  if (last && last.year === year) last.items.push({ post, i });
+  else groups.push({ year, items: [{ post, i }] });
+});
+
+// Every post carries `blog` (it is what publishes it), so it says nothing as a filter
+const topics = (tags: string[]) => tags.filter((t) => t !== 'blog');
+---
+
+{groups.map(({ year, items }) => (
+  <section>
+    {year && <h2 class="year">{year}</h2>}
+    <ul class="item-list">
+      {items.map(({ post, i }) => (
+        <li style={`--i: ${i}`}>
+          <a class="item-link" href={`/surface/blog/${post.id}`}>
+            <span class="item-title">{post.data.title}</span>
+            {post.data.date && (
+              <time datetime={post.data.date.toISOString()}>
+                {post.data.date.toLocaleDateString('zh-CN')}
+              </time>
+            )}
+          </a>
+          {post.data.description && <p class="item-desc">{post.data.description}</p>}
+          {topics(post.data.tags).length > 0 && (
+            <div class="item-tags">
+              {topics(post.data.tags).map((tag) => (
+                <a class="tag" href={`/surface/blog/tag/${tag}/`}>{tag}</a>
+              ))}
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  </section>
+))}
+
+<style>
+  .year {
+    margin: var(--space-lg) 0 0;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--surface-text-secondary);
+  }
+
+  .item-list { list-style: none; padding: 0; }
+
+  .item-list li {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--surface-border);
+    opacity: 0;
+    animation: rowReveal 0.4s ease forwards;
+    animation-delay: calc(0.1s + var(--i) * 0.05s);
+  }
+
+  .item-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+  }
+
+  .item-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: color var(--transition-smooth);
+  }
+
+  .item-link:hover .item-title {
+    color: var(--surface-accent);
+  }
+
+  time {
+    font-size: 0.85rem;
+    color: var(--surface-text-secondary);
+    white-space: nowrap;
+  }
+
+  .item-desc {
+    margin-top: var(--space-xs);
+    font-size: 0.9rem;
+    color: var(--surface-text-secondary);
+  }
+
+  .item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.15em 0.5em;
+    border-radius: 3px;
+    background: var(--tag-bg);
+    color: var(--surface-text-secondary);
+    transition: color var(--transition-smooth);
+  }
+
+  .tag:hover {
+    color: var(--surface-accent);
+  }
+
+  @keyframes rowReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 767px) {
+    .item-link {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-xs);
+    }
+  }
+</style>
