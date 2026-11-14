@@ -81,3 +81,9 @@ export const PERF = {
   /** Resolution scale when FPS is low */
   LOW_RES_SCALE: 0.5,
 } as const;
+
+/** Cursor trail on Layer 1 */
+export const RIPPLE = {
+  /** Brush radius of the trail stroke (CSS px) */
+  BRUSH_RADIUS_PX: 14,
+} as const;

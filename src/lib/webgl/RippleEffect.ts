@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import vertSrc from '../../shaders/ripple.vert.glsl?raw';
 import simFragSrc from '../../shaders/rippleSim.frag.glsl?raw';
 import compositeFragSrc from '../../shaders/ripple.frag.glsl?raw';
+import { RIPPLE } from '../constants';
 
 export class RippleEffect {
   private renderer: THREE.WebGLRenderer;
@@ -9,8 +10,6 @@ export class RippleEffect {
   private camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   private fbos: THREE.WebGLRenderTarget[] = [];
   private currentIdx = 0;
-  private previousIdx = 1;
-  private outputIdx = 2;
   private simMaterial: THREE.ShaderMaterial;
   private compositeMaterial: THREE.ShaderMaterial;
   private quad: THREE.Mesh;
@@ -18,6 +17,10 @@ export class RippleEffect {
   private resScale = 1;
   private width: number;
   private height: number;
+  /** Latest pointer position (uv), and the one used by the last rendered frame */
+  private mouse = new THREE.Vector2(-1, -1);
+  private lastMouse: THREE.Vector2 | null = null;
+  private mouseDirty = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.width = canvas.clientWidth;
@@ -40,7 +43,7 @@ export class RippleEffect {
     };
     const fboW = Math.floor(this.width * this.resScale);
     const fboH = Math.floor(this.height * this.resScale);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       this.fbos.push(new THREE.WebGLRenderTarget(fboW, fboH, fboOpts));
     }
 
@@ -49,10 +52,12 @@ export class RippleEffect {
       fragmentShader: simFragSrc,
       uniforms: {
         uCurrent: { value: this.fbos[0].texture },
-        uPrevious: { value: this.fbos[1].texture },
         uMouse: { value: new THREE.Vector2(-1, -1) },
+        uPrevMouse: { value: new THREE.Vector2(-1, -1) },
         uMouseActive: { value: 0.0 },
         uTexelSize: { value: new THREE.Vector2(1 / fboW, 1 / fboH) },
+        uAspect: { value: this.width / this.height },
+        uRadius: { value: RIPPLE.BRUSH_RADIUS_PX / this.height },
       },
     });
 
@@ -61,8 +66,11 @@ export class RippleEffect {
       fragmentShader: compositeFragSrc,
       uniforms: {
         uHeightMap: { value: this.fbos[0].texture },
+        uTint: { value: new THREE.Color(1, 1, 1) },
       },
-      transparent: true,
+      // The canvas is not premultiplied: write straight colour + alpha. Letting
+      // three blend here would darken the colour by its own alpha.
+      blending: THREE.NoBlending,
     });
 
     const geo = new THREE.PlaneGeometry(2, 2);
@@ -93,41 +101,48 @@ export class RippleEffect {
     const now = performance.now();
     this.onFrame?.(now);
 
-    // Sim pass: read current + previous → write to output (all different FBOs)
-    this.simMaterial.uniforms.uCurrent.value = this.fbos[this.currentIdx].texture;
-    this.simMaterial.uniforms.uPrevious.value = this.fbos[this.previousIdx].texture;
+    const sim = this.simMaterial.uniforms;
+    if (this.mouseDirty) {
+      (sim.uPrevMouse.value as THREE.Vector2).copy(this.lastMouse ?? this.mouse);
+      (sim.uMouse.value as THREE.Vector2).copy(this.mouse);
+      sim.uMouseActive.value = 1.0;
+      this.lastMouse = (this.lastMouse ?? new THREE.Vector2()).copy(this.mouse);
+      this.mouseDirty = false;
+    } else {
+      sim.uMouseActive.value = 0.0;
+    }
+
+    // Sim pass: read current → write to the other FBO, then swap
+    sim.uCurrent.value = this.fbos[this.currentIdx].texture;
     this.quad.material = this.simMaterial;
-    this.renderer.setRenderTarget(this.fbos[this.outputIdx]);
+    this.currentIdx = 1 - this.currentIdx;
+    this.renderer.setRenderTarget(this.fbos[this.currentIdx]);
     this.renderer.render(this.scene, this.camera);
 
-    // Rotate indices: output becomes current, current becomes previous, previous becomes output
-    const oldPrevious = this.previousIdx;
-    this.previousIdx = this.currentIdx;
-    this.currentIdx = this.outputIdx;
-    this.outputIdx = oldPrevious;
-
-    // Composite pass: read height map → render to screen
+    // Composite pass: read ink map → render to screen
     this.compositeMaterial.uniforms.uHeightMap.value = this.fbos[this.currentIdx].texture;
     this.quad.material = this.compositeMaterial;
     this.renderer.setRenderTarget(null);
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
-
-    // Reset mouse active after each frame to avoid continuous injection
-    this.simMaterial.uniforms.uMouseActive.value = 0.0;
   }
 
   onMouseMove(x: number, y: number) {
-    const u = x / this.width;
-    const v = 1.0 - y / this.height; // flip Y
-    (this.simMaterial.uniforms.uMouse.value as THREE.Vector2).set(u, v);
-    this.simMaterial.uniforms.uMouseActive.value = 1.0;
+    this.mouse.set(x / this.width, 1.0 - y / this.height); // flip Y
+    this.mouseDirty = true;
+  }
+
+  /** Colour of the trail (any CSS colour string) */
+  setTint(color: string) {
+    (this.compositeMaterial.uniforms.uTint.value as THREE.Color).set(color);
   }
 
   resize(w: number, h: number) {
     this.width = w;
     this.height = h;
     this.renderer.setSize(w, h);
+    this.simMaterial.uniforms.uAspect.value = w / h;
+    this.simMaterial.uniforms.uRadius.value = RIPPLE.BRUSH_RADIUS_PX / h;
     this.updateFBOSize();
   }
 

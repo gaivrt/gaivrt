@@ -151,7 +151,10 @@ function normalizeMarkdown(raw: string): string {
     // remove zero-width spaces and other invisible chars from otherwise-blank lines
     .replace(/^[\u200B\u200C\u200D\uFEFF \t]+$/gm, '')
     // convert Typora-style single-$ display math to standard $$
-    .replace(/^\$\s*$/gm, '$$$$');
+    .replace(/^\$\s*$/gm, '$$$$')
+    // Obsidian shows a one-line `$$...$$` paragraph as display math; remark-math
+    // only does so when the fences sit on their own lines
+    .replace(/^([ \t>]*)\$\$([^$\n]*[^$\s])\$\$[ \t]*$/gm, '$1$$$$\n$1$2\n$1$$$$');
 }
 
 // ── Loader ───────────────────────────────────────────

@@ -17,7 +17,7 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       remarkGfm,
-      [remarkMath, { singleDollarTextMath: false }],
+      remarkMath,
       remarkObsidianWikilinks,
       remarkObsidianCallouts,
       remarkMarkHighlight,

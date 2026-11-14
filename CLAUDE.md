@@ -32,7 +32,7 @@ Engine: `src/lib/particles/ParticleText.ts` (config-driven, `src/lib/constants.t
 Component: `src/components/entrance/ParticleEntrance.tsx` (Solid.js island).
 
 ### Layer 1 — Surface (`pages/surface/`)
-Warm paper editorial theme (#f5f0e8 background). Cormorant Garamond display font. SVG feTurbulence paper grain texture overlay. WebGL ripple produces warm golden glow on mouse movement (candlelight effect via `mix-blend-mode: soft-light`). After 30s, SVG cracks appear; clicking them transitions to Layer 2.
+Warm paper editorial theme (#f5f0e8 background). Cormorant Garamond display font. SVG feTurbulence paper grain texture overlay. WebGL cursor trail draws a tapered ink stroke in the theme accent colour on mouse movement. After 30s, SVG cracks appear; clicking them transitions to Layer 2.
 
 Homepage: centered hero with avatar + book-style TOC navigation (no navbar).
 Subpages: minimal `← GAIVRT` back-link via `BackLink.astro` (no sticky nav).
@@ -59,11 +59,11 @@ InkBleed idle delay also scales with visits: >10 → 15s, >5 → 18s, default �
 ## WebGL Pipeline (Ripple Effect)
 
 `RippleEffect.ts` manages the Three.js scene with dual FBO ping-pong:
-1. `rippleSim.frag.glsl` — water wave equation, mouse energy injection, decay
-2. `ripple.frag.glsl` — composite pass: height map → warm golden glow (`soft-light` blend)
+1. `rippleSim.frag.glsl` — ink map: capsule brush from previous to current mouse position, slight bleed, decay
+2. `ripple.frag.glsl` — composite pass: ink map → accent-tinted stroke that narrows as it fades
 3. `ripple.vert.glsl` — fullscreen quad vertex shader
 
-Canvas overlays with `position:fixed; pointer-events:none; z-index:10; mix-blend-mode:soft-light`. Mouse events captured at document level.
+Canvas overlays with `position:fixed; pointer-events:none; z-index:10`. Mouse events captured at document level.
 
 Performance monitor (`performanceMonitor.ts`) degrades gracefully: FPS < 30 → half resolution, FPS < 15 → CSS radial-gradient fallback.
 

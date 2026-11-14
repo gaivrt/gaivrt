@@ -27,6 +27,14 @@ export default function RippleCanvas() {
     });
 
     effect.onFrame = (time) => monitor.tick(time);
+
+    // Trail takes the theme's accent colour
+    const root = document.documentElement;
+    const syncTint = () =>
+      effect?.setTint(getComputedStyle(root).getPropertyValue('--surface-accent').trim());
+    syncTint();
+    const themeObserver = new MutationObserver(syncTint);
+    themeObserver.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
     effect.start();
 
     const onMouseMove = (e: MouseEvent) => {
@@ -55,6 +63,7 @@ export default function RippleCanvas() {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('visibilitychange', onVisChange);
       window.removeEventListener('resize', onResize);
+      themeObserver.disconnect();
       effect?.dispose();
     });
   });
@@ -76,7 +85,7 @@ export default function RippleCanvas() {
             position: 'fixed',
             inset: '0',
             'pointer-events': 'none',
-            background: `radial-gradient(circle 120px at ${mousePos().x}px ${mousePos().y}px, rgba(255,245,220,0.15), transparent)`,
+            background: `radial-gradient(circle 60px at ${mousePos().x}px ${mousePos().y}px, color-mix(in srgb, var(--surface-accent) 25%, transparent), transparent)`,
           }}
         />
       )}
