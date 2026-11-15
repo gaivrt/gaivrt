@@ -1,0 +1,34 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layer1Layout from '../../layouts/Layer1Layout.astro';
+import BackLink from '../../components/surface/BackLink.astro';
+
+const items = await getCollection('research');
+let InlineContent: any = null;
+if (items.length > 0) {
+  const result = await render(items[0]);
+  InlineContent = result.Content;
+}
+---
+
+<Layer1Layout title="Research — GAIVRT">
+  <div class="surface-container">
+    <BackLink />
+    <main>
+      <h1>Research</h1>
+      {InlineContent ? (
+        <article class="prose">
+          <InlineContent />
+        </article>
+      ) : (
+        <p class="empty">暂无内容。</p>
+      )}
+    </main>
+  </div>
+</Layer1Layout>
+
+<style>
+  main { max-width: var(--content-width); margin: 0 auto; }
+  h1 { margin: 0 0 var(--space-lg); }
+  .empty { color: var(--surface-text-secondary); font-style: italic; }
+</style>

@@ -1,4 +1,5 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 import { r2Loader } from '../lib/r2-loader';
 
 const blog = defineCollection({
@@ -15,13 +16,12 @@ const blog = defineCollection({
   }),
 });
 
+// The fragments live in the repo, not the vault: saving a note there would publish it
 const thoughts = defineCollection({
-  loader: r2Loader({ prefix: 'gaivrt/Thoughts/' }),
+  loader: glob({ pattern: '*.md', base: './src/content/thoughts' }),
   schema: z.object({
     title: z.string().optional(),
     date: z.coerce.date().optional(),
-    /** Minimum visit count required to see this thought */
-    unlockAt: z.number().default(3),
   }),
 });
 

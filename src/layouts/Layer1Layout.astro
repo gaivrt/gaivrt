@@ -1,8 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import RippleCanvas from '../components/surface/RippleCanvas.tsx';
-import InkBleedOverlay from '../components/surface/InkBleedOverlay.tsx';
 import ThemeToggle from '../components/shared/ThemeToggle.astro';
+import Wine from '../components/surface/Wine.astro';
 import '../styles/layer1.css';
 
 interface Props {
@@ -14,34 +13,10 @@ const { title, description } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
-  <div id="ripple-mount" aria-hidden="true">
-    <RippleCanvas client:only="solid-js" />
-  </div>
-
-  <!-- Ink bleed overlay -->
-  <div id="inkbleed-overlay" aria-hidden="true">
-    <InkBleedOverlay client:only="solid-js" />
-  </div>
-
   <ThemeToggle />
 
   <div class="surface">
     <slot />
   </div>
+  <Wine />
 </BaseLayout>
-
-<style>
-  #ripple-mount {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  #inkbleed-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    pointer-events: none;
-  }
-</style>

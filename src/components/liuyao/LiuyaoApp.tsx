@@ -374,7 +374,7 @@ export default function LiuyaoApp() {
   return (
     <div class="liuyao-app" classList={{ 'screen-shaking': shaking() }}>
       <header class="liuyao-nav">
-        <a href="/surface/" class="site-back-link" aria-label="Back to GAIVRT">
+        <a href="/" class="site-back-link" aria-label="Back to GAIVRT">
           <span class="site-back-arrow">←</span><span class="site-back-name">GAIVRT</span>
         </a>
         <button class="text-button" type="button" onClick={() => setHistoryOpen(true)}>历史</button>

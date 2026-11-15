@@ -50,6 +50,13 @@
     color: var(--surface-accent);
   }
 
+  /* Tap target larger than the icon */
+  #theme-toggle::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+
   #theme-toggle svg {
     width: 18px;
     height: 18px;

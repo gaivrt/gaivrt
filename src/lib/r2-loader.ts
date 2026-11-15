@@ -96,7 +96,11 @@ async function readLocal(
   srcDir: URL,
 ): Promise<RawFile[]> {
   const dir = join(fileURLToPath(srcDir), 'content', collection);
-  const entries = await readdir(dir);
+  // A collection with no local folder is simply empty
+  const entries = await readdir(dir).catch((e) => {
+    if (e.code === 'ENOENT') return [] as string[];
+    throw e;
+  });
   const files: RawFile[] = [];
   for (const entry of entries) {
     if (!isValidMd(entry)) continue;

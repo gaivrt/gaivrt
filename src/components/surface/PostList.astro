@@ -26,7 +26,7 @@ const topics = (tags: string[]) => tags.filter((t) => t.trim() && t !== 'blog');
     <ul class="item-list">
       {items.map(({ post, i }) => (
         <li style={`--i: ${i}`}>
-          <a class="item-link" href={`/surface/blog/${post.id}`}>
+          <a class="item-link" href={`/blog/${post.id}`}>
             <span class="item-title">{post.data.title}</span>
             {post.data.date && (
               <time datetime={post.data.date.toISOString()}>
@@ -38,7 +38,7 @@ const topics = (tags: string[]) => tags.filter((t) => t.trim() && t !== 'blog');
           {topics(post.data.tags).length > 0 && (
             <div class="item-tags">
               {topics(post.data.tags).map((tag) => (
-                <a class="tag" href={`/surface/blog/tag/${tag}/`}>{tag}</a>
+                <a class="tag" href={`/blog/tag/${tag}/`}>{tag}</a>
               ))}
             </div>
           )}
@@ -114,6 +114,12 @@ const topics = (tags: string[]) => tags.filter((t) => t.trim() && t !== 'blog');
 
   .tag:hover {
     color: var(--surface-accent);
+  }
+
+  /* Taller tap target on touch screens */
+  @media (pointer: coarse) {
+    .tag { position: relative; }
+    .tag::after { content: ''; position: absolute; inset: -8px -2px; }
   }
 
   @keyframes rowReveal {

@@ -2,30 +2,27 @@ import { onMount, onCleanup, createSignal } from 'solid-js';
 import { ParticleText } from '../../lib/particles/ParticleText';
 import { PerformanceMonitor } from '../../lib/webgl/performanceMonitor';
 import { getVisitCount } from '../../lib/visitStore';
-import { ENTRANCE, TIMING } from '../../lib/constants';
+import { TIMING } from '../../lib/constants';
 
 export default function ParticleEntrance() {
   let canvasRef!: HTMLCanvasElement;
   const [showHint, setShowHint] = createSignal(false);
-  const [exiting, setExiting] = createSignal(false);
+  let exiting = false;
 
-  function navigateToSurface() {
-    window.location.replace('/surface/');
-  }
+  /** Whether to show at all is decided before first paint, in Entrance.astro. */
+  const root = document.documentElement;
+  const finish = () => { delete root.dataset.entrance; };
 
   onMount(() => {
+    if (root.dataset.entrance !== 'show') return;
     const visits = getVisitCount();
-    if (visits > ENTRANCE.SKIP_THRESHOLD && Math.random() > ENTRANCE.REAPPEAR_CHANCE) {
-      navigateToSurface();
-      return;
-    }
 
     let engine: ParticleText | null = null;
     try {
       engine = new ParticleText(canvasRef);
       engine.darkMode = document.documentElement.getAttribute('data-theme') === 'dark';
     } catch {
-      navigateToSurface();
+      finish();
       return;
     }
 
@@ -36,7 +33,7 @@ export default function ParticleEntrance() {
       onCriticalFps: () => {
         engine?.dispose();
         engine = null;
-        navigateToSurface();
+        finish();
       },
     });
 
@@ -48,12 +45,14 @@ export default function ParticleEntrance() {
     const hintTimer = setTimeout(() => setShowHint(true), hintDelay);
 
     const handleExit = () => {
-      if (exiting()) return;
-      setExiting(true);
-      setTimeout(navigateToSurface, 350);
+      if (exiting) return;
+      exiting = true;
+      root.dataset.entrance = 'leaving';   // fades the overlay out (Entrance.astro)
+      setTimeout(() => { finish(); engine?.dispose(); engine = null; }, 350);
     };
 
-    const onClick = () => handleExit();
+    // The click belongs to the entrance alone: nothing on the page beneath should hear it
+    const onClick = (e: MouseEvent) => { e.stopPropagation(); handleExit(); };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab' || e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
       handleExit();
@@ -78,7 +77,7 @@ export default function ParticleEntrance() {
 
     const onResize = () => engine?.resize();
 
-    document.addEventListener('click', onClick);
+    window.addEventListener('click', onClick, { capture: true, once: true });
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseleave', onMouseLeave);
@@ -89,7 +88,7 @@ export default function ParticleEntrance() {
 
     onCleanup(() => {
       clearTimeout(hintTimer);
-      document.removeEventListener('click', onClick);
+      window.removeEventListener('click', onClick, { capture: true });
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseleave', onMouseLeave);
@@ -102,13 +101,7 @@ export default function ParticleEntrance() {
   });
 
   return (
-    <div
-      class="entrance-container"
-      style={{
-        opacity: exiting() ? '0' : '1',
-        transition: 'opacity 0.35s ease-out',
-      }}
-    >
+    <div class="entrance-container">
       <canvas
         ref={canvasRef}
         style={{

@@ -6,17 +6,17 @@ interface Props {
 const { currentPath } = Astro.props;
 
 const links = [
-  { href: '/surface/', label: 'Home' },
-  { href: '/surface/research', label: 'Research' },
-  { href: '/surface/publications', label: 'Publications' },
-  { href: '/surface/projects', label: 'Projects' },
-  { href: '/surface/blog', label: 'Blog' },
-  { href: '/surface/cv', label: 'CV' },
+  { href: '/', label: 'Home' },
+  { href: '/research', label: 'Research' },
+  { href: '/publications', label: 'Publications' },
+  { href: '/projects', label: 'Projects' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/cv', label: 'CV' },
 ];
 ---
 
 <nav class="nav" aria-label="Primary navigation">
-  <a href="/surface/" class="nav-brand">GAIVRT</a>
+  <a href="/" class="nav-brand">GAIVRT</a>
   <ul class="nav-links">
     {links.map((link, i) => (
       <>

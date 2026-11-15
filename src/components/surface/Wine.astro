@@ -1,0 +1,166 @@
+---
+/**
+ * Wine — every surface page lies under clear water, which the pointer stirs.
+ * Now and then, on the homepage, wine seeps up into it and brings out hidden lines: deeper
+ * ones the longer it stands, and under those the titles of the thoughts, which lead to them.
+ * A touch screen has no pointer to stir clear water with, so there only the wine comes.
+ * Wine lies on the page and scrolls with it; clear water only fills the window.
+ * Back doors: `/#wine` brings the wine at once, whatever the conditions. `/#deep` does too,
+ * and there it soaks in twelve times as fast, so one press brings out every layer.
+ */
+import { getCollection } from 'astro:content';
+
+const thoughts = Astro.url.pathname === '/'
+  ? (await getCollection('thoughts')).map((t) => ({ title: t.data.title || t.id, href: `/depths/thoughts/${t.id}` }))
+  : [];
+---
+
+{thoughts.length > 0 && <script type="application/json" id="wine-thoughts" set:html={JSON.stringify(thoughts)} />}
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+  import { WINE } from '../../lib/constants';
+  import { getVisitCount } from '../../lib/visitStore';
+
+  const DAY_KEY = 'gaivrt_wine';
+  const PLACES = 8;   // the engine has this many places in the margins
+  const SINK = 1100;  // ms for the wine to deepen into the dark of the depths (as in the CSS below)
+
+  const shuffled = <T,>(list: T[]) => list.map((v) => [Math.random(), v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v);
+  /** Short enough for a margin: 16 full-width characters, a Latin one counting as half */
+  const fits = (line: string) => [...line].reduce((n, c) => n + (c.charCodeAt(0) < 256 ? 0.5 : 1), 0) <= 16;
+
+  /** For each place, its lines from shallow to deep. Some places hold a thought's title under those. */
+  async function hidden(): Promise<{ lines: string[][]; links: (string | undefined)[] }> {
+    const { SHALLOW, DEEPER, DEEPEST } = await import('../../lib/wine/lines');
+    const [a, b, c] = [SHALLOW, DEEPER, DEEPEST].map((pool) => shuffled(pool.filter(fits)));
+    const thoughts: { title: string; href: string }[] = JSON.parse(document.getElementById('wine-thoughts')?.textContent ?? '[]');
+    const under = shuffled([...shuffled(thoughts).slice(0, PLACES), ...Array(PLACES).fill(null)].slice(0, PLACES));
+    return {
+      lines: under.map((t, i) => [a[i], b[i], c[i], ...(t ? [t.title] : [])]),
+      links: under.map((t) => t?.href),
+    };
+  }
+
+  const today = () => new Date().toDateString();
+  const stored = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+
+  /** Does the wine come on this visit? */
+  function chosen(): boolean {
+    return location.pathname === '/'
+      && !document.documentElement.dataset.entrance
+      && getVisitCount() >= WINE.MIN_VISITS
+      && stored(DAY_KEY) !== today()
+      && Math.random() < WINE.CHANCE;
+  }
+
+  document.addEventListener('astro:page-load', async () => {
+    const forced = location.pathname === '/' && ['#wine', '#deep'].includes(location.hash);
+    const page = document.querySelector<HTMLElement>('.surface:not(.liuyao-page) main');
+    if (!page) return;
+    if (!forced && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const pours = forced || chosen();   // decided now: the entrance may be gone by the time the code arrives
+    const touch = matchMedia('(pointer: coarse)').matches;
+    if (touch && !pours) return;
+
+    const leaving = new AbortController();
+    document.addEventListener('astro:before-swap', () => leaving.abort(), { once: true });
+    const [{ WineEffect }, { lines, links }] = await Promise.all([import('../../lib/wine/WineEffect'), pours ? hidden() : { lines: [], links: [] }]);
+    if (leaving.signal.aborted) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'wine';
+    (pours ? page.closest('.surface')! : document.body).append(canvas);
+    let wine: InstanceType<typeof WineEffect>;
+    try { wine = new WineEffect(canvas, lines, page, !touch); } catch { canvas.remove(); return; }
+    canvas.before(wine.veil);
+    if (forced && location.hash === '#deep') wine.haste = 12;
+    // Once wine has come a press pours. It should not also drag a link or a picture away,
+    // nor, on a touch screen, open a link's menu
+    const surface = canvas.parentElement!;
+    const pouring = (e: Event) => { if (surface.classList.contains('wine-poured')) e.preventDefault(); };
+    addEventListener('dragstart', pouring, { signal: leaving.signal });
+    if (touch) addEventListener('contextmenu', pouring, { signal: leaving.signal });
+    // The way down: the wine deepens until it is the dark of the depths, and the thought is in it
+    let sinking = false;
+    wine.onLine = (place) => {
+      if (sinking) return;
+      sinking = true;
+      const sink = document.createElement('div');
+      sink.className = 'wine-sink';
+      document.body.append(sink);
+      setTimeout(() => navigate(links[place]!), SINK);
+    };
+    leaving.signal.addEventListener('abort', () => { wine.dispose(); canvas.remove(); wine.veil.remove(); });
+    if (!pours) return;
+
+    // It comes once the visitor has been still for a while
+    const still = new AbortController();
+    leaving.signal.addEventListener('abort', () => still.abort());
+    const pour = () => {
+      if (document.documentElement.dataset.entrance) { timer = setTimeout(pour, 500); return; }   // not behind the entrance
+      still.abort();
+      surface.classList.add('wine-poured');
+      wine.seep(Math.random() < 0.5 ? 0.17 : 0.83, 0.35 + Math.random() * 0.3, WINE.FIRST_POUR);
+      try { localStorage.setItem(DAY_KEY, today()); } catch {}
+    };
+    const wait = forced ? 1500 : WINE.STILL_MIN + Math.random() * (WINE.STILL_MAX - WINE.STILL_MIN);
+    let timer = setTimeout(pour, wait);
+    still.signal.addEventListener('abort', () => clearTimeout(timer));
+    if (!forced) {
+      for (const type of ['pointermove', 'pointerdown', 'keydown', 'scroll']) {
+        addEventListener(type, () => { clearTimeout(timer); timer = setTimeout(pour, wait); }, { signal: still.signal, capture: true });
+      }
+    }
+  });
+</script>
+
+<style is:global>
+  .wine,
+  .wine-veil {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 12;
+    pointer-events: none;
+  }
+
+  /* Wine is on the page, not the window: it scrolls with it, and a phone's address bar sliding away leaves it alone */
+  .surface > :is(.wine, .wine-veil) {
+    position: absolute;
+  }
+
+  .wine {
+    mix-blend-mode: multiply;
+  }
+
+  /* Nothing is left to point at where the page has soaked away */
+  .wine-gone,
+  .wine-gone * {
+    cursor: default;
+  }
+
+  /* A press pours: it should not select text or open a link's preview too */
+  .wine-poured {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  [data-theme="dark"] .wine {
+    mix-blend-mode: screen;
+  }
+
+  .wine-sink {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--depths-bg);
+    animation: wine-sink 1100ms ease-in both;
+  }
+
+  @keyframes wine-sink {
+    from { opacity: 0; }
+  }
+</style>

@@ -6,8 +6,9 @@
   --surface-border: #ddd5c8;
   --surface-accent: #8b5e3c;
 
-  /* Layer 2: Depths (deep warm black) */
-  --depths-bg: #0a0806;
+  /* Layer 2: Depths (the dark at the bottom of the wine: by day burgundy gone black) */
+  --depths-bg: #14040b;
+  --depths-glow: rgba(125, 30, 72, 0.2);
   --depths-text: rgba(235, 220, 200, 0.7);
   --depths-text-dim: rgba(235, 220, 200, 0.3);
   --depths-text-bright: rgba(245, 235, 220, 0.95);
@@ -45,6 +46,9 @@
   --surface-border: #2e2822;
   --surface-accent: #c4845c;
   --tag-bg: rgba(200, 180, 150, 0.12);
+  /* Night's wine is champagne, and its depths a warm black */
+  --depths-bg: #0a0806;
+  --depths-glow: rgba(200, 165, 105, 0.07);
 
   color-scheme: dark;
 }

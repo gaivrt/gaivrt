@@ -1,5 +1,14 @@
 ---
-import { getCollection, render } from 'astro:content';
+/**
+ * A thought, read one line at a time, in wine on paper as on the surface: wine wells up in the
+ * middle of the page and the line stands in it, left bare like wax under a wash. When the next
+ * one comes it dims and moves up. Each line of the note is one line here.
+ * It moves on by itself; a press, Space or an arrow key moves it sooner (left and up go back,
+ * Escape leaves). More wine comes with every line. After the last the wine thins to paper and
+ * one is back on the surface.
+ * Without scripts, motion or WebGL the lines stand in the dark, under one another or one at a time.
+ */
+import { getCollection } from 'astro:content';
 import Layer2Layout from '../../../layouts/Layer2Layout.astro';
 
 export async function getStaticPaths() {
@@ -11,28 +20,239 @@ export async function getStaticPaths() {
 }
 
 const { thought } = Astro.props;
-const { Content } = await render(thought);
+const lines = (thought.body ?? '')
+  .split('\n')
+  .map((line) => line.replace(/^\s*(?:[-*>]|#+|\d+\.)\s+/, '').replace(/\*\*|==|\[\[|\]\]/g, '').trim())
+  .filter((line) => line && !/^(?:-{3,}|<!--.*-->)$/.test(line));
+
+// A line may only wrap between words, never inside one, and punctuation stays with the word before it
+const words = new Intl.Segmenter('zh', { granularity: 'word' });
+const phrases = (line: string) => [...words.segment(line)].reduce<string[]>((out, { segment, isWordLike }) => {
+  if (isWordLike || !out.length || !segment.trim()) out.push(segment);
+  else out[out.length - 1] += segment;
+  return out;
+}, []);
 ---
 
 <Layer2Layout title={`${thought.data.title || 'Thought'} — GAIVRT`}>
-  <div class="depths-container">
-    <article class="prose" style="color: var(--depths-text);">
-      <Content />
-    </article>
-    <a href="/depths/core" class="back-link">← 返回</a>
-  </div>
+  <ol class="thought">
+    {lines.map((line) => <li class:list={{ long: line.length > 34 }}>{phrases(line).map((phrase) => <>{phrase}<wbr /></>)}</li>)}
+  </ol>
+  <noscript><style>.thought li { opacity: 1 !important; }</style></noscript>
 </Layer2Layout>
 
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  const FIRST = 2600;                    // ms before the first line, while the dark draws together into wine
+  const POUR = 3;                        // simulated seconds the first source stays open
+  const RISE = 1800;                     // ms to come back up to the surface (as in the CSS below)
+  const hold = (line: string) => Math.min(9000, Math.max(2800, 1700 + 150 * line.length));   // long enough to read it
+
+  document.addEventListener('astro:page-load', async () => {
+    const thought = document.querySelector<HTMLElement>('.thought');
+    if (!thought || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const lines = [...thought.children] as HTMLElement[];
+    const leaving = new AbortController();
+    document.addEventListener('astro:before-swap', () => leaving.abort(), { once: true });
+    thought.classList.add('playing');
+
+    // The wine wells up where the words are, more of it with every line.
+    // The pointer stirs it and a press pours, as on the surface.
+    const { WineEffect } = await import('../../../lib/wine/WineEffect');
+    if (leaving.signal.aborted) return;
+    const depths = thought.parentElement!;
+    const pool = document.createElement('div');   // of its own, so that the engine swallows no press on the words
+    pool.className = 'thought-wine';
+    const canvas = pool.appendChild(document.createElement('canvas'));
+    thought.before(pool);
+    let wine: InstanceType<typeof WineEffect> | null = null;
+    try { wine = new WineEffect(canvas, [], pool, false); } catch { pool.remove(); }
+    if (wine) {
+      // One came down through the dark: it lifts off the paper as the first wine comes
+      const dark = document.createElement('div');
+      dark.className = 'thought-dark';
+      dark.addEventListener('animationend', () => dark.remove());
+      depths.append(dark);
+      depths.classList.add('in-wine');
+    }
+    const pour = (open: number) => wine?.seep(0.44 + Math.random() * 0.12, 0.44 + Math.random() * 0.12, open);
+    pour(POUR);
+    leaving.signal.addEventListener('abort', () => { wine?.dispose(); pool.remove(); });
+
+    let at = -1;
+    let timer = 0;
+    let rising = false;
+    // Up again: the wine thins to paper, and one is back on the surface as if nothing had been
+    const rise = () => {
+      if (rising) return;
+      rising = true;
+      clearTimeout(timer);
+      lines.forEach((line) => { line.dataset.at = 'gone'; });
+      const up = document.createElement('div');
+      up.className = 'thought-rise';
+      document.body.append(up);
+      document.addEventListener('astro:after-swap', () => up.classList.add('out'), { once: true });
+      up.addEventListener('animationend', (e) => { if (e.animationName === 'thought-out') up.remove(); });
+      setTimeout(() => navigate('/'), RISE);
+    };
+    const show = (to: number) => {
+      if (rising || to < 0) return;
+      if (to >= lines.length) return rise();
+      if (to > at) pour(POUR * 0.6);
+      at = to;
+      lines.forEach((line, i) => { line.dataset.at = i === at ? 'now' : i === at - 1 ? 'last' : i < at ? 'gone' : 'next'; });
+      // the one before stands just above this one, smaller, as if further off
+      if (at > 0) lines[at - 1].style.setProperty('--lift', `${lines[at].offsetHeight / 2 + lines[at - 1].offsetHeight * 0.35 + 28}px`);
+      clearTimeout(timer);
+      timer = window.setTimeout(() => show(at + 1), hold(lines[at].textContent!));
+    };
+    timer = window.setTimeout(() => show(0), FIRST);
+    leaving.signal.addEventListener('abort', () => clearTimeout(timer));
+
+    thought.addEventListener('click', () => show(at + 1), { signal: leaving.signal });
+    addEventListener('keydown', (e) => {
+      if ([' ', 'ArrowRight', 'ArrowDown'].includes(e.key)) { e.preventDefault(); show(at + 1); }
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); show(at - 1); }
+      if (e.key === 'Escape') rise();
+    }, { signal: leaving.signal });
+  });
+</script>
+
 <style>
-  .back-link {
-    display: inline-block;
-    margin-top: var(--space-xl);
-    font-size: 0.85rem;
-    color: var(--depths-text-dim);
-    transition: color var(--transition-smooth);
+  .thought {
+    list-style: none;
+    margin: 0;
+    min-height: 100dvh;
+    padding: var(--space-2xl) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.4em;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+    line-height: 1.6;
+    letter-spacing: 0.08em;
+    color: var(--depths-text-bright);
   }
 
-  .back-link:hover {
-    color: var(--depths-text-bright);
+  .thought li {
+    max-width: 22em;
+    margin-inline: auto;
+    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* Nothing is to be seen until the first line rises */
+  @media (prefers-reduced-motion: no-preference) {
+    .thought:not(.playing) li { opacity: 0; }
+  }
+
+  /* One at a time: every line lies in the same place, in the middle of the page */
+  .thought.playing {
+    height: 100dvh;
+    padding-block: var(--space-xl);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    font-size: clamp(1.3rem, 3.3vw, 2.3rem);
+    letter-spacing: 0.16em;
+    line-height: 1.8;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .thought.playing li {
+    grid-area: 1 / 1;
+    max-width: 15em;
+    margin: 0;
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(0.8em);
+    transition: opacity 1.8s ease, filter 1.8s ease, transform 2.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .thought.playing li.long {
+    font-size: 0.72em;
+    max-width: 24em;
+  }
+
+  .thought.playing li[data-at="now"] {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .thought.playing li[data-at="last"] {
+    opacity: 0.16;
+    filter: blur(1.5px);
+    transform: translateY(calc(-1 * var(--lift))) scale(0.7);
+  }
+
+  .thought.playing {
+    position: relative;   /* over the wine */
+    z-index: 2;
+  }
+
+  .thought.playing li[data-at="gone"] {
+    filter: blur(4px);
+    transform: translateY(calc(-1 * var(--lift) - 1.2em)) scale(0.55);
+  }
+</style>
+
+<style is:global>
+  /* Wine on the paper, as on the surface: it darkens the paper by day and lights it by night */
+  .thought-wine,
+  .thought-wine canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .thought-wine {
+    mix-blend-mode: multiply;
+  }
+
+  [data-theme="dark"] .thought-wine {
+    mix-blend-mode: screen;
+  }
+
+  /* The words are the paper itself, left bare: they are only to be read where wine stands */
+  .depths.in-wine .thought.playing {
+    color: var(--surface-bg);
+  }
+
+  .thought-dark {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: var(--depths-bg);
+    animation: thought-out 2400ms ease-in-out 300ms both;
+  }
+
+  .thought-rise {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--surface-bg);
+    animation: thought-in 1800ms ease-in both;
+  }
+
+  .thought-rise.out {
+    animation: thought-out 900ms ease-out both;
+    pointer-events: none;
+  }
+
+  @keyframes thought-in {
+    from { opacity: 0; }
+  }
+
+  @keyframes thought-out {
+    to { opacity: 0; }
   }
 </style>

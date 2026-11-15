@@ -330,6 +330,12 @@ p + p { margin-top: var(--space-md); }
 }
 
 /* ── Responsive ── */
+/* Wide tables scroll sideways instead of squeezing cells to one character per line */
+@media (max-width: 1023px) {
+  .prose th { white-space: nowrap; }
+  .prose td { min-width: 5em; }
+}
+
 @media (max-width: 767px) {
   .prose {
     max-width: 100%;

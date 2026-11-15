@@ -52,7 +52,10 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
     font-size: 0.85rem;
   }
 
+  /* The whole box opens it, not just the line of text */
   .toc-inline summary {
+    margin: calc(-1 * var(--space-sm)) calc(-1 * var(--space-md));
+    padding: var(--space-sm) var(--space-md);
     cursor: pointer;
     font-weight: 500;
     color: var(--surface-text-secondary);
@@ -83,6 +86,16 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
   .toc-inline a:hover {
     color: var(--surface-text);
+  }
+
+  @media (pointer: coarse) {
+    .toc-inline li { padding: 0; }
+    .toc-inline a { display: block; padding: 0.45em 0; }
+  }
+
+  /* The sidebar takes over where the page layouts show it */
+  @media (min-width: 1024px) {
+    .toc-inline { display: none; }
   }
 
   /* --- Desktop sidebar TOC --- */

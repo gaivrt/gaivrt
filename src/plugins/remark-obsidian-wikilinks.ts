@@ -30,7 +30,7 @@ function visitText(node: any, parent: any, index: number) {
     // the link itself
     children.push({
       type: 'link',
-      url: `/surface/blog/${toSlug(target)}`,
+      url: `/blog/${toSlug(target)}`,
       children: [{ type: 'text', value: display?.trim() || target.trim() }],
     });
 
